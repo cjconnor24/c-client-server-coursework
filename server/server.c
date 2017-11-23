@@ -119,6 +119,8 @@ void send_hello(int socket)
 // as before...
 void get_and_send_employee(int socket, employee * e)
 {
+
+	sleep(1);
     size_t payload_length;
 
     size_t n =
