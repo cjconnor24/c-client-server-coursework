@@ -31,6 +31,7 @@ typedef struct {
 void get_and_send_employee(int, employee *);
 void send_hello(int);
 char *get_ip_address();
+void send_string(int socket, char *response);
 
 // you shouldn't need to change main() in the server except the port number
 int main(void)
@@ -81,6 +82,27 @@ int main(void)
     exit(EXIT_SUCCESS);
 } // end main()
 
+void get_time(){
+
+   time_t t;    // always look up the manual to see the error conditions
+    //  here "man 2 time"
+    if ((t = time(NULL)) == -1) {
+        perror("time error");
+        exit(EXIT_FAILURE);
+    }
+
+    // localtime() is in standard library so error conditions are
+    //  here "man 3 localtime"
+    struct tm *tm;
+    if ((tm = localtime(&t)) == NULL) {
+        perror("localtime error");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("%s", asctime(tm));
+
+}
+
 // SEND THE STUDENT NAME AND NUMBER
 void send_student_info(int socket){
 
@@ -95,6 +117,15 @@ void send_student_info(int socket){
 
 	// FREE UP THE MEMORY IN IPADDRESS
 	free(ipaddress);
+
+	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
+	writen(socket, (unsigned char *)response, payload_length);
+
+}
+
+void send_string(int socket, char *response){
+
+	size_t payload_length = strlen(response);
 
 	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
 	writen(socket, (unsigned char *)response, payload_length);
@@ -173,9 +204,12 @@ do {
 	send_student_info(connfd);
 	break;
 	case '2':
-	printf("GET MENU CHOICE\n");
+	printf("SEND THE TIME\n");
+	get_time();
 	send_student_info(connfd);
 	break;
+	case '3':
+	send_string(connfd,"This is a string");
 	default:
 	printf("DEFAULT MENU\n");
 
