@@ -43,9 +43,6 @@ void send_and_get_employee(int socket, employee *e)
 void send_menu_choice(int socket, char choice){
 
 
-	//char request[] = "THIS WAS THE VALUE";
-	//char *response;
-
 	size_t payload_length = sizeof(char);
 
 printf("payload_length is: %zu (%zu bytes)\n", payload_length, payload_length);
@@ -56,7 +53,7 @@ printf("payload_length is: %zu (%zu bytes)\n", payload_length, payload_length);
 
 	readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
 
-char *e = (char *)malloc(sizeof(char)*5);
+char *e = (char *)malloc(sizeof(char)*payload_length);
 
 	readn(socket, (unsigned char *) e, payload_length);
 

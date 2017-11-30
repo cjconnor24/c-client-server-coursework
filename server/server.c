@@ -73,6 +73,28 @@ int main(void)
     exit(EXIT_SUCCESS);
 } // end main()
 
+// SEND THE STUDENT NAME AND NUMBER
+void send_student_info(int socket){
+
+//	size_t n = readn(socket, (unsigned char *) &payload_length, sizeof(size_t));
+
+//	printf("payload_length is: %zu (%zu bytes)\n", payload_length, n);
+
+//	 n = readn(socket, (unsigned char *) choice, payload_length);
+
+	
+//
+//	printf("The receipt of data was:%c\n",*choice);
+	char si[] = "Chris Connor Hello\nThis is a test";
+	size_t payload_length = strlen(si)+1;
+
+	//size_t payload_length;
+	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
+	writen(socket, (unsigned char *)si, payload_length);
+
+
+}
+
 void get_menu_choice(int socket, char *choice){
 
 	size_t payload_length = sizeof(char);
@@ -87,9 +109,9 @@ printf("Reaches here?");
 	
 	printf("The receipt of data was:%c\n",*choice);
 
-
-    writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
-    writen(socket, (unsigned char *) choice, payload_length);
+	// DONT WRITE BACK HERE
+//    writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
+ //   writen(socket, (unsigned char *) choice, payload_length);
 
 //free(result);
 
@@ -109,8 +131,21 @@ void *client_handler(void *socket_desc)
 char *menu_choice = (char *)malloc(sizeof(char));
 
 do {
-
+	// GET MENU CHOICE AND SET THE CHOICE POINTER
 	get_menu_choice(connfd,menu_choice);
+
+	switch(*menu_choice) {
+
+	case '1':
+	printf("GET MENU CHOICE\n");
+	send_student_info(connfd);
+	break;
+	default:
+	printf("DEFAULT MENU\n");
+
+	send_student_info(connfd);
+	}
+
 } while(*menu_choice!='4');
 
 
