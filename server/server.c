@@ -153,6 +153,8 @@ void send_string(int socket, char *response){
 
 	writen(socket, (unsigned char *)response, payload_length);
 
+//	free(response);
+
 }
 
 char *get_ip_address(){
@@ -292,9 +294,11 @@ do {
 	send_server_details(connfd,get_server_details());
 	break;
 	case '4':
-	send_string(connfd,get_file_list());
+//	char *filelist = get_file_list();
+
+//	send_string(connfd,get_file_list());
 	//send_file_list(filelist);
-	//send_string(connfd,"Still working on this");
+	send_string(connfd,"Still working on this");
 	break;
 	default:
 	printf("DEFAULT MENU\n");
@@ -303,9 +307,9 @@ do {
 	//send_string(connfd,"NO OPTION THIS IS DEFAULT");
 	}
 
-} while(*menu_choice!='5');
+} while(*menu_choice!='6');
 
-
+printf("# IMMEDIATELY AFTER WHILE #\n");
 //	send_student_info(connfd);
 free(menu_choice);
 //TODO: SEND STUDENT ID

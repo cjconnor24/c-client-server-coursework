@@ -222,12 +222,15 @@ send_menu_choice(sockfd, '3',read_server_details);
 	//sleep(4);
 //	    printf("Goodbye!\n");
 	    break;
+	case '6':
+	send_menu_choice(sockfd,'6',read_string);
+	break;
 	default:
 	    printf("Invalid choice - 0 displays options...!\n");
 		displaymenu();
 	    break;
 	}
-    } while (input != '5');
+    } while (input != '6');
 
     // send and receive a changed struct to/from the server
 /*    employee *employee1;		
