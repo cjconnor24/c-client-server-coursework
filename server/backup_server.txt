@@ -111,13 +111,12 @@ char *menu_choice = (char *)malloc(sizeof(char));
 do {
 
 	get_menu_choice(connfd,menu_choice);
+
 } while(*menu_choice!='4');
 
-
-free(menu_choice);
 //TODO: SEND STUDENT ID
 
-/*    employee *employee1;
+    employee *employee1;
     employee1 = (employee *) malloc(sizeof(employee));
 
     int i;
@@ -127,7 +126,7 @@ free(menu_choice);
 	printf("\n");
     }
 
-    free(employee1);*/
+    free(employee1);
 
     shutdown(connfd, SHUT_RDWR);
     close(connfd);
