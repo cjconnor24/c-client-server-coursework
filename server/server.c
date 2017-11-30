@@ -85,12 +85,12 @@ void send_student_info(int socket){
 	
 //
 //	printf("The receipt of data was:%c\n",*choice);
-	char si[] = "Chris Connor Hello\nThis is a test";
-	size_t payload_length = strlen(si)+1;
+	char response[] = "Chris Connor Hello\nThis is a test";
+	size_t payload_length = strlen(response)+1;
 
 	//size_t payload_length;
 	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
-	writen(socket, (unsigned char *)si, payload_length);
+	writen(socket, (unsigned char *)response, payload_length);
 
 
 }
