@@ -3,6 +3,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/ioctl.h>
+#include <netinet/in.h>
+#include <net/if.h>
+#include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -11,6 +15,8 @@
 #include <sys/types.h>
 #include <pthread.h>
 #include "rdwrn.h"
+
+
 
 // thread function
 void *client_handler(void *);
@@ -21,8 +27,10 @@ typedef struct {
     float salary;
 } employee;
 
+// PROTOTYPES
 void get_and_send_employee(int, employee *);
 void send_hello(int);
+char *get_ip_address();
 
 // you shouldn't need to change main() in the server except the port number
 int main(void)
@@ -76,22 +84,46 @@ int main(void)
 // SEND THE STUDENT NAME AND NUMBER
 void send_student_info(int socket){
 
-//	size_t n = readn(socket, (unsigned char *) &payload_length, sizeof(size_t));
-
-//	printf("payload_length is: %zu (%zu bytes)\n", payload_length, n);
-
-//	 n = readn(socket, (unsigned char *) choice, payload_length);
-
+	char *ipaddress = get_ip_address();
+	char name[] = "Christopher Connor";
+	char sid[] = "S1234567";
 	
-//
-//	printf("The receipt of data was:%c\n",*choice);
-	char response[] = "Chris Connor Hello\nThis is a test";
-	size_t payload_length = strlen(response)+1;
+	char response[100];
+	snprintf(response,100,"%s,%s,%s",name,sid,(char *)ipaddress);
 
-	//size_t payload_length;
+	size_t payload_length = sizeof(response)+1;
+
+	// FREE UP THE MEMORY IN IPADDRESS
+	free(ipaddress);
+
 	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
 	writen(socket, (unsigned char *)response, payload_length);
 
+}
+
+char *get_ip_address(){
+
+	int fd;
+	struct ifreq ifr;
+
+    fd = socket(AF_INET, SOCK_DGRAM, 0);
+
+    /* I want to get an IPv4 IP address */
+    ifr.ifr_addr.sa_family = AF_INET;
+
+    /* I want an IP address attached to "eth0" */
+    strncpy(ifr.ifr_name, "eth0", IFNAMSIZ-1);
+
+    ioctl(fd, SIOCGIFADDR, &ifr);
+
+    close(fd);
+    /* Display result */
+	int ipsize = 16;
+	char *ipaddress = (char *)malloc(sizeof(char)*ipsize);
+    snprintf(ipaddress,ipsize,"%s\n", inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
+    //printf("%s\n", inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
+
+	return ipaddress;
 
 }
 
@@ -137,6 +169,10 @@ do {
 	switch(*menu_choice) {
 
 	case '1':
+	printf("GET MENU CHOICE\n");
+	send_student_info(connfd);
+	break;
+	case '2':
 	printf("GET MENU CHOICE\n");
 	send_student_info(connfd);
 	break;
