@@ -148,6 +148,8 @@ send_menu_choice(sockfd, '2');
 send_menu_choice(sockfd, '3');
 	    break;
 	case '4':
+	send_menu_choice(sockfd, '4');
+	//sleep(4);
 	    printf("Goodbye!\n");
 	    break;
 	default:
@@ -158,7 +160,7 @@ send_menu_choice(sockfd, '3');
     } while (input != '4');
 
     // send and receive a changed struct to/from the server
-    employee *employee1;		
+/*    employee *employee1;		
     employee1 = (employee *) malloc(sizeof(employee));
 
     // arbitrary values
@@ -173,7 +175,7 @@ send_menu_choice(sockfd, '3');
          printf("\n");
     }
 
-    free(employee1);
+    free(employee1);*/
 
     // *** make sure sockets are cleaned up
 
