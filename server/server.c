@@ -114,7 +114,7 @@ void send_student_info(int socket){
 	char *response = malloc(sizeof(char)*100);
 	snprintf(response,100,"%s,%s,%s",name,sid,(char *)ipaddress);
 
-	printf("%s\n",response);
+	//printf("%s\n",response);
 
 
 	// FREE UP THE MEMORY IN IPADDRESS
@@ -157,7 +157,7 @@ char *get_ip_address(){
     /* Display result */
 	int ipsize = 16;
 	char *ipaddress = (char *)malloc(sizeof(char)*ipsize);
-    snprintf(ipaddress,ipsize,"%s\n", inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
+    snprintf(ipaddress,ipsize,"%s", inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
     //printf("%s\n", inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
 
 	return ipaddress;
@@ -213,7 +213,7 @@ do {
 	case '2':
 	printf("SEND THE TIME\n");
 	//send_student_info(connfd);
-	send_string(connfd,"This was two");
+	send_string(connfd,get_time());
 	break;
 
 	default:
