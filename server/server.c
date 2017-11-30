@@ -144,12 +144,12 @@ void send_string(int socket, char *response){
 	size_t payload_length = strlen(response);
 
 	// TEMP DEBUG
-	printf("PAYLOAD: %s //EOL%zu\n",response,payload_length);
+	//printf("PAYLOAD: %s //EOL%zu\n",response,payload_length);
 
 	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
 	
 	// TEMP DEBUG
-	printf("DATA: %s //EOL%zu\n",response,payload_length);
+	//printf("DATA: %s //EOL%zu\n",response,payload_length);
 
 	writen(socket, (unsigned char *)response, payload_length);
 
@@ -194,11 +194,11 @@ struct utsname *get_server_details(){
 	return NULL;
     }
 
-    printf("Node name:    %s\n", uts->nodename);
+    /*printf("Node name:    %s\n", uts->nodename);
     printf("System name:  %s\n", uts->sysname);
     printf("Release:      %s\n", uts->release);
     printf("Version:      %s\n", uts->version);
-    printf("Machine:      %s\n", uts->machine);
+    printf("Machine:      %s\n", uts->machine);*/
 
 	return uts;
 
@@ -240,16 +240,18 @@ void send_server_details(int socket, struct utsname *uts){
 void get_menu_choice(int socket, char *choice){
 
 	size_t payload_length = sizeof(char);
-	size_t n = readn(socket, (unsigned char *) &payload_length, sizeof(size_t));
+	//size_t n = 
+	readn(socket, (unsigned char *) &payload_length, sizeof(size_t));
 
-	printf("payload_length is: %zu (%zu bytes)\n", payload_length, n);
+	//printf("payload_length is: %zu (%zu bytes)\n", payload_length, n);
 	//unsigned char result[payload_length];
 
-printf("Reaches here?");
-	 n = readn(socket, (unsigned char *) choice, payload_length);
+	//printf("Reaches here?");
+	// n = 
+	readn(socket, (unsigned char *) choice, payload_length);
 
 	
-	printf("The receipt of data was:%c\n",*choice);
+	//printf("The receipt of data was:%c\n",*choice);
 
 	// DONT WRITE BACK HERE
 //    writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
@@ -258,6 +260,10 @@ printf("Reaches here?");
 //free(result);
 
 }
+
+    //printf("%s", asctime(tm));
+//	return asctime(tm);
+
 
 // thread function - one instance of each for each connected client
 // this is where the do-while loop will go
@@ -279,37 +285,42 @@ do {
 	switch(*menu_choice) {
 
 	case '1':
+	//generate_log("Sending User Info");
+	printf("Sending Student Info\n");
 	send_student_info(connfd);
 	break;
 
 	case '2':
-	printf("SEND THE TIME\n");
+	{
+	printf("Sending the time...\n");
 	char *time = get_time();
-	//send_student_info(connfd);
 	send_string(connfd,time);
-//	char *time = get_time();
-//	send_string(connfd,time);
+	//free(time);
 	break;
+	}
 	case '3':
+	printf("Sending server details\n");
 	send_server_details(connfd,get_server_details());
 	break;
 	case '4':
-//	char *filelist = get_file_list();
-
-//	send_string(connfd,get_file_list());
-	//send_file_list(filelist);
-	send_string(connfd,"Still working on this");
+	{
+	printf("Sending file list...\n");
+	char *filelist = get_file_list();
+	send_string(connfd,filelist);
+	free(filelist);
 	break;
+	}
 	default:
-	printf("DEFAULT MENU\n");
-	send_student_info(connfd);
+	//printf("DEFAULT MENU\n");
+	//send_student_info(connfd);
+	send_string(connfd,"Goodbye...");
 	break;
 	//send_string(connfd,"NO OPTION THIS IS DEFAULT");
 	}
 
 } while(*menu_choice!='6');
 
-printf("# IMMEDIATELY AFTER WHILE #\n");
+//printf("# IMMEDIATELY AFTER WHILE #\n");
 //	send_student_info(connfd);
 free(menu_choice);
 //TODO: SEND STUDENT ID

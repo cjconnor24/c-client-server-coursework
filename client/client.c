@@ -47,15 +47,17 @@ void send_and_get_employee(int socket, employee *e)
 void read_string(int socket){
 
 	size_t payload_length = sizeof(size_t);
-	size_t n =readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
+	//size_t n =
+	readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
 
-	printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
+	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
 
 	char *e = malloc(sizeof(char)*payload_length);
 
-	n = readn(socket, (unsigned char *) e, payload_length);
+	//n = 
+	readn(socket, (unsigned char *) e, payload_length);
 
-	printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
+	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
 
 	printf("%s\n",e);
 
@@ -68,7 +70,7 @@ void read_server_details(int socket){
 
 	size_t n =readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
 
-	printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
+	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
 
 	struct utsname *uts = malloc(sizeof(struct utsname));
 
