@@ -40,6 +40,10 @@ void send_and_get_employee(int socket, employee *e)
     printf("Salary is %6.2f\n", e->salary);    
 } // end send_and_get_employee()
 
+void read_string(int socket){
+
+}
+
 void send_menu_choice(int socket, char choice){
 
 
@@ -56,12 +60,11 @@ void send_menu_choice(int socket, char choice){
 
 	printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
 
-	char *e = (char *)malloc(sizeof(char)*payload_length);
+	char *e = malloc(sizeof(char)*payload_length);
 
 	n = readn(socket, (unsigned char *) e, payload_length);
 
 	printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
-//	printf("PAYLOAD: %s //EOL%zu\n",payload_length,n);
 
 	printf("%s\n",e);
 
@@ -142,7 +145,8 @@ char input;
 	    displaymenu();
 	    break;
 	case '1':
-send_menu_choice(sockfd, '1');
+	printf("MENU ONE");
+//send_menu_choice(sockfd, '1');
 	    break;
 	case '2':
 send_menu_choice(sockfd, '2');

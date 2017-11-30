@@ -131,6 +131,7 @@ void send_student_info(int socket){
 	free(response);
 }
 
+// SEND STRING BACK TO CLIENT
 void send_string(int socket, char *response){
 
 	size_t payload_length = strlen(response);
@@ -173,22 +174,40 @@ char *get_ip_address(){
 
 }
 
-void get_server_details(){
+struct utsname *get_server_details(){
 
-    struct utsname uts;
+    struct utsname *uts = malloc(sizeof(struct utsname));
 
-    if (uname(&uts) == -1) {
+    if (uname(uts) == -1) {
 	printf("This did not work");
 	//perror("uname error");
 	//exit(EXIT_FAILURE);
+	return NULL;
     }
 
-    printf("Node name:    %s\n", uts.nodename);
-    printf("System name:  %s\n", uts.sysname);
-    printf("Release:      %s\n", uts.release);
-    printf("Version:      %s\n", uts.version);
-    printf("Machine:      %s\n", uts.machine);
+    printf("Node name:    %s\n", uts->nodename);
+    printf("System name:  %s\n", uts->sysname);
+    printf("Release:      %s\n", uts->release);
+    printf("Version:      %s\n", uts->version);
+    printf("Machine:      %s\n", uts->machine);
 
+	return uts;
+
+}
+
+void send_server_details(int socket, struct utsname *uts){
+
+	size_t payload_length = sizeof(struct utsname);
+
+	// TEMP DEBUG
+	//printf("PAYLOAD: %s //EOL%zu\n",uts,payload_length);
+
+	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
+	
+	// TEMP DEBUG
+	//printf("DATA: %s //EOL%zu\n",uts,payload_length);
+
+	writen(socket, (unsigned char *)uts, payload_length);
 }
 
 void get_menu_choice(int socket, char *choice){
@@ -244,8 +263,8 @@ do {
 	send_string(connfd,time);
 	break;
 	case '3':
-	get_server_details();
-	send_student_info(connfd);
+	send_server_details(connfd,get_server_details());
+	//send_student_info(connfd);
 	break;
 	default:
 	printf("DEFAULT MENU\n");
