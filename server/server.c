@@ -73,6 +73,28 @@ int main(void)
     exit(EXIT_SUCCESS);
 } // end main()
 
+void get_menu_choice(int socket, char *choice){
+
+	size_t payload_length = sizeof(char);
+	size_t n = readn(socket, (unsigned char *) &payload_length, sizeof(size_t));
+
+	printf("payload_length is: %zu (%zu bytes)\n", payload_length, n);
+	//unsigned char result[payload_length];
+
+printf("Reaches here?");
+	 n = readn(socket, (unsigned char *) choice, payload_length);
+
+	
+	printf("The receipt of data was:%c\n",*choice);
+
+
+    writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
+    writen(socket, (unsigned char *) choice, payload_length);
+
+//free(result);
+
+}
+
 // thread function - one instance of each for each connected client
 // this is where the do-while loop will go
 void *client_handler(void *socket_desc)
@@ -81,6 +103,18 @@ void *client_handler(void *socket_desc)
     int connfd = *(int *) socket_desc;
 
     send_hello(connfd);
+
+
+// TODO: GET MENU OPTION
+char *menu_choice = (char *)malloc(sizeof(char));
+
+do {
+
+	get_menu_choice(connfd,menu_choice);
+
+} while(*menu_choice!='4');
+
+//TODO: SEND STUDENT ID
 
     employee *employee1;
     employee1 = (employee *) malloc(sizeof(employee));
@@ -123,8 +157,7 @@ void get_and_send_employee(int socket, employee * e)
 	sleep(1);
     size_t payload_length;
 
-    size_t n =
-	readn(socket, (unsigned char *) &payload_length, sizeof(size_t));
+    size_t n = readn(socket, (unsigned char *) &payload_length, sizeof(size_t));
     printf("payload_length is: %zu (%zu bytes)\n", payload_length, n);
     n = readn(socket, (unsigned char *) e, payload_length);
 
