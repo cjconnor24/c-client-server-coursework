@@ -407,11 +407,18 @@ char *get_file_list(){
 	size_t newstringlen = oldlen+newlen+1;
 
 	// RESIZE THE LIST TO MAKE IT LARGER
-	filelist = realloc(filelist,sizeof(char)*newstringlen);
-
+	char *temp = realloc(filelist,sizeof(char)*newstringlen);
+	
+	// CHECK TO ENSURE REALLOC WAS SUCCESSFUL
+	if(!temp){
+	// ERROR
+	free(temp);
+	printf("Erro with realloc");
+	} else {
 	// THEN COPY THE FILE AND ADD A NEW LINE
 	strcat(filelist,new);
 	strcat(filelist,"\n");
+	}
 
 
             free(namelist[n]);  //NB
@@ -426,7 +433,7 @@ char *get_file_list(){
 
 }
 
-char *build_list(char *old, char *new){
+/*char *build_list(char *old, char *new){
 
 	size_t oldlen = strlen(old);
 	size_t newlen = strlen(new);
@@ -444,7 +451,7 @@ char *build_list(char *old, char *new){
 //	snprintf(newstring,newstringlen,"%s\n%s",old,new);
 
 //	return newstring;
-}
+}*/
 
 void stat_file(char *file)
 {

@@ -52,29 +52,32 @@ void read_string(int socket){
 
 	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
 
-	char *e = malloc(sizeof(char)*payload_length);
-
+	char *result = malloc(sizeof(char)*payload_length);
+//	result = 0;
+	
 	//n = 
-	readn(socket, (unsigned char *) e, payload_length);
+	readn(socket, (unsigned char *) result, payload_length);
 
 	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
 
-	printf("%s\n",e);
+	printf("%s\n",result);
 
-	free(e);
+	free(result);
 }
 
 void read_server_details(int socket){
 
 	size_t payload_length = sizeof(struct utsname);
 
-	size_t n =readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
+	//size_t n =
+	readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
 
 	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
 
 	struct utsname *uts = malloc(sizeof(struct utsname));
 
-	n = readn(socket, (unsigned char *) uts, payload_length);
+	//n = 
+	readn(socket, (unsigned char *) uts, payload_length);
 
 /*    if (uname(uts) == -1) {
         printf("This did not work");
