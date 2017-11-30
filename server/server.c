@@ -208,6 +208,8 @@ void send_server_details(int socket, struct utsname *uts){
 	//printf("DATA: %s //EOL%zu\n",uts,payload_length);
 
 	writen(socket, (unsigned char *)uts, payload_length);
+	// FREE UTS ONCE SENT
+	free(uts);
 }
 
 void get_menu_choice(int socket, char *choice){
