@@ -53,7 +53,7 @@ int main(void)
 
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serv_addr.sin_port = htons(50001);
+    serv_addr.sin_port = htons(50031);
 
     bind(listenfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
 

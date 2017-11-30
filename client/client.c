@@ -177,7 +177,7 @@ int main(void)
     serv_addr.sin_family = AF_INET;
 
     // IP address and port of server we want to connect to
-    serv_addr.sin_port = htons(50001);
+    serv_addr.sin_port = htons(50031);
     serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
     // try to connect...
