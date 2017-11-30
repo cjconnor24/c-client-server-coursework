@@ -152,7 +152,9 @@ void displaymenu()
 	printf("[1]\tGet Student Information \n");
 	printf("[2]\tGet server timestamp\n");
 	printf("[3]\tGet server information\n");
-	printf("[4] Exit\n");
+	printf("[4]\tGet server file list\n");
+	printf("-------------------\n");
+	printf("[6] Exit\n");
 
 }
 
@@ -218,14 +220,14 @@ send_menu_choice(sockfd, '3',read_server_details);
 	case '4':
 	send_menu_choice(sockfd, '4',read_string);
 	//sleep(4);
-	    printf("Goodbye!\n");
+//	    printf("Goodbye!\n");
 	    break;
 	default:
 	    printf("Invalid choice - 0 displays options...!\n");
 		displaymenu();
 	    break;
 	}
-    } while (input != '4');
+    } while (input != '5');
 
     // send and receive a changed struct to/from the server
 /*    employee *employee1;		

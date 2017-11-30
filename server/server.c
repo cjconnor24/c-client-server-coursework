@@ -16,7 +16,11 @@
 #include <pthread.h>
 #include "rdwrn.h"
 #include <sys/utsname.h>
-
+#include <dirent.h>
+#include <time.h>
+#include <sys/types.h>
+#include <time.h>
+#include <sys/stat.h>
 
 // thread function
 void *client_handler(void *);
@@ -32,6 +36,9 @@ void get_and_send_employee(int, employee *);
 void send_hello(int);
 char *get_ip_address();
 void send_string(int socket, char *response);
+void stat_file(char *file);
+char *get_file_list();
+char *build_list(char *old, char *new);
 
 // you shouldn't need to change main() in the server except the port number
 int main(void)
@@ -195,6 +202,22 @@ struct utsname *get_server_details(){
 
 }
 
+void send_file_list(int socket, struct dirent *filelist){
+
+	size_t payload_length = sizeof(struct dirent);
+
+	// TEMP DEBUG
+	//printf("PAYLOAD: %s //EOL%zu\n",uts,payload_length);
+
+	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
+	
+	// TEMP DEBUG
+	//printf("DATA: %s //EOL%zu\n",uts,payload_length);
+
+	writen(socket, (unsigned char *)filelist, payload_length);
+	// FREE UTS ONCE SENT
+	free(filelist);
+}
 void send_server_details(int socket, struct utsname *uts){
 
 	size_t payload_length = sizeof(struct utsname);
@@ -254,7 +277,6 @@ do {
 	switch(*menu_choice) {
 
 	case '1':
-	printf("GET MENU CHOICE\n");
 	send_student_info(connfd);
 	break;
 
@@ -263,19 +285,25 @@ do {
 	char *time = get_time();
 	//send_student_info(connfd);
 	send_string(connfd,time);
+//	char *time = get_time();
+//	send_string(connfd,time);
 	break;
 	case '3':
 	send_server_details(connfd,get_server_details());
-	//send_student_info(connfd);
+	break;
+	case '4':
+	send_string(connfd,get_file_list());
+	//send_file_list(filelist);
+	//send_string(connfd,"Still working on this");
 	break;
 	default:
 	printf("DEFAULT MENU\n");
 	send_student_info(connfd);
-	//break;
+	break;
 	//send_string(connfd,"NO OPTION THIS IS DEFAULT");
 	}
 
-} while(*menu_choice!='4');
+} while(*menu_choice!='5');
 
 
 //	send_student_info(connfd);
@@ -339,3 +367,95 @@ void get_and_send_employee(int socket, employee * e)
     writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
     writen(socket, (unsigned char *) e, payload_length);
 }  // end get_and_send_employee()
+
+char *get_file_list(){
+
+    struct dirent **namelist;
+    int n;
+
+
+	if ((n = scandir(".", &namelist, NULL, alphasort)) == -1){
+        	perror("scandir");
+		return "";
+	} else {
+
+	//printf("There are %d files in the dir\n",n);
+
+	char *filelist = malloc(1);
+	strcpy(filelist,"");
+        while (n--) {
+
+
+	char *new = namelist[n]->d_name;
+	size_t oldlen = strlen(filelist);
+	size_t newlen = strlen(new);
+	size_t newstringlen = oldlen+newlen+1;
+
+	// RESIZE THE LIST TO MAKE IT LARGER
+	filelist = realloc(filelist,sizeof(char)*newstringlen);
+
+	// THEN COPY THE FILE AND ADD A NEW LINE
+	strcat(filelist,new);
+	strcat(filelist,"\n");
+
+
+            free(namelist[n]);  //NB
+        }
+
+	//printf("The list:%s\n",filelist);
+	//free(filelist);
+	return filelist;
+        free(namelist);         //NB
+    }
+
+
+}
+
+char *build_list(char *old, char *new){
+
+	size_t oldlen = strlen(old);
+	size_t newlen = strlen(new);
+	size_t newstringlen = oldlen+newlen+1;
+
+	//char *newstring = (char *)malloc(sizeof(char)*(newstringlen)+1);
+
+	char *temp = (char *)realloc(old,sizeof(char)*newstringlen);
+	strcat(old,new);
+	
+
+	return temp;
+//	strcpy(newstring,old);
+//	strcpy(newstring,new);
+//	snprintf(newstring,newstringlen,"%s\n%s",old,new);
+
+//	return newstring;
+}
+
+void stat_file(char *file)
+{
+
+    struct stat sb;
+
+    if (stat(file, &sb) == -1) {
+	perror("stat");
+	exit(EXIT_FAILURE);
+    }
+
+	if(S_ISREG(sb.st_mode)){
+    printf("I-node number:            %ld\n", (long) sb.st_ino);
+    printf("Mode:                     %lo (octal)\n",
+	   (unsigned long) sb.st_mode);
+
+    printf("Link count:               %ld\n", (long) sb.st_nlink);
+    printf("Ownership:                UID=%ld   GID=%ld\n",
+	   (long) sb.st_uid, (long) sb.st_gid);
+    printf("Preferred I/O block size: %ld bytes\n", (long) sb.st_blksize);
+    printf("File size:                %lld bytes\n",
+	   (long long) sb.st_size);
+    printf("Blocks allocated:         %lld\n", (long long) sb.st_blocks);
+    printf("Last status change:       %s", ctime(&sb.st_ctime));
+    printf("Last file access:         %s", ctime(&sb.st_atime));
+    printf("Last file modification:   %s", ctime(&sb.st_mtime));
+    printf("\n");
+}
+}
