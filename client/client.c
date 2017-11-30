@@ -13,6 +13,8 @@
 #include <arpa/inet.h>
 #include "rdwrn.h"
 
+#define INPUTSIZ 10
+
 typedef struct {
     int id_number;
     int age;
@@ -38,6 +40,32 @@ void send_and_get_employee(int socket, employee *e)
     printf("Salary is %6.2f\n", e->salary);    
 } // end send_and_get_employee()
 
+void send_menu_choice(int socket, char choice){
+
+
+	//char request[] = "THIS WAS THE VALUE";
+	//char *response;
+
+	size_t payload_length = sizeof(char);
+
+printf("payload_length is: %zu (%zu bytes)\n", payload_length, payload_length);
+
+	    // SEND THE VALUE OF INT
+    writen(socket, (unsigned char *) &payload_length, sizeof(size_t));	
+    writen(socket, (unsigned char *) &choice, payload_length);
+
+	readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
+
+char *e = (char *)malloc(sizeof(char)*5);
+
+	readn(socket, (unsigned char *) e, payload_length);
+
+	printf("The value back was: %s\n",e);
+
+free(e);
+
+}
+
 // how to receive a string
 void get_hello(int socket)
 {
@@ -50,6 +78,16 @@ void get_hello(int socket)
     printf("Hello String: %s\n", hello_string);
     printf("Received: %zu bytes\n\n", k);
 } // end get_hello()
+
+void displaymenu()
+{
+    
+	printf("0. Display menu\n");
+	printf("(1.) Get Student Information \n");
+    printf("2. Second option\n");
+    printf("3. Third option\n");
+    printf("4. Exit\n");
+}
 
 int main(void)
 {
@@ -82,6 +120,42 @@ int main(void)
 
     // get a string from the server
     get_hello(sockfd);
+
+char input;
+    char name[10];
+
+    displaymenu();
+
+    do {
+	printf("option> ");
+	fgets(name, INPUTSIZ, stdin);	
+	name[strcspn(name, "\n")] = 0;
+	input = name[0];
+	if (strlen(name) > 1)
+	    input = 'x';	
+
+	switch (input) {
+	case '0':
+	    displaymenu();
+	    break;
+	case '1':
+send_menu_choice(sockfd, '1');
+	    break;
+	case '2':
+send_menu_choice(sockfd, '2');
+	    break;
+	case '3':
+send_menu_choice(sockfd, '3');
+	    break;
+	case '4':
+	    printf("Goodbye!\n");
+	    break;
+	default:
+	    printf("Invalid choice - 0 displays options...!\n");
+		displaymenu();
+	    break;
+	}
+    } while (input != '4');
 
     // send and receive a changed struct to/from the server
     employee *employee1;		
