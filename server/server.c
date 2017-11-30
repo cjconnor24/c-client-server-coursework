@@ -82,7 +82,7 @@ int main(void)
     exit(EXIT_SUCCESS);
 } // end main()
 
-void get_time(){
+char *get_time(){
 
    time_t t;    // always look up the manual to see the error conditions
     //  here "man 2 time"
@@ -99,7 +99,8 @@ void get_time(){
         exit(EXIT_FAILURE);
     }
 
-    printf("%s", asctime(tm));
+    //printf("%s", asctime(tm));
+	return asctime(tm);
 
 }
 
@@ -110,17 +111,22 @@ void send_student_info(int socket){
 	char name[] = "Christopher Connor";
 	char sid[] = "S1234567";
 	
-	char response[100];
+	char *response = malloc(sizeof(char)*100);
 	snprintf(response,100,"%s,%s,%s",name,sid,(char *)ipaddress);
 
-	size_t payload_length = sizeof(response)+1;
+	printf("%s\n",response);
+
 
 	// FREE UP THE MEMORY IN IPADDRESS
-	free(ipaddress);
 
+	//send_string(&socket,response);
+
+	size_t payload_length = strlen(response)+1;
 	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
 	writen(socket, (unsigned char *)response, payload_length);
 
+	free(ipaddress);
+	free(response);
 }
 
 void send_string(int socket, char *response){
@@ -203,22 +209,23 @@ do {
 	printf("GET MENU CHOICE\n");
 	send_student_info(connfd);
 	break;
+
 	case '2':
 	printf("SEND THE TIME\n");
-	get_time();
-	send_student_info(connfd);
+	//send_student_info(connfd);
+	send_string(connfd,"This was two");
 	break;
-	case '3':
-	send_string(connfd,"This is a string");
+
 	default:
 	printf("DEFAULT MENU\n");
-
 	send_student_info(connfd);
+	//send_string(connfd,"NO OPTION THIS IS DEFAULT");
 	}
 
 } while(*menu_choice!='4');
 
 
+//	send_student_info(connfd);
 free(menu_choice);
 //TODO: SEND STUDENT ID
 
