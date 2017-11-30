@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <arpa/inet.h>
 #include "rdwrn.h"
+#include <sys/utsname.h>
 
 #define INPUTSIZ 10
 
@@ -20,6 +21,9 @@ typedef struct {
     int age;
     float salary;
 } employee;
+
+// CREATING TO ALLOW CALLBACK
+typedef void (*read_cb)(int socket);
 
 // how to send and receive structs
 void send_and_get_employee(int socket, employee *e)  
@@ -42,20 +46,7 @@ void send_and_get_employee(int socket, employee *e)
 
 void read_string(int socket){
 
-}
-
-void send_menu_choice(int socket, char choice){
-
-
-	size_t payload_length = sizeof(char);
-
-	//printf("payload_length is: %zu (%zu bytes)\n", payload_length, payload_length);
-
-	    // SEND THE VALUE OF INT
-	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));	
-	writen(socket, (unsigned char *) &choice, payload_length);
-
-	payload_length = sizeof(size_t);
+	size_t payload_length = sizeof(size_t);
 	size_t n =readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
 
 	printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
@@ -68,9 +59,77 @@ void send_menu_choice(int socket, char choice){
 
 	printf("%s\n",e);
 
-free(e);
-
+	free(e);
 }
+
+void read_server_details(int socket){
+
+	size_t payload_length = sizeof(struct utsname);
+
+	size_t n =readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
+
+	printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
+
+	struct utsname *uts = malloc(sizeof(struct utsname));
+
+	n = readn(socket, (unsigned char *) uts, payload_length);
+
+/*    if (uname(uts) == -1) {
+        printf("This did not work");
+        //perror("uname error");
+        //exit(EXIT_FAILURE);
+        return NULL;
+    }*/
+
+    printf("Node name:    %s\n", uts->nodename);
+    printf("System name:  %s\n", uts->sysname);
+    printf("Release:      %s\n", uts->release);
+    printf("Version:      %s\n", uts->version);
+    printf("Machine:      %s\n", uts->machine);
+
+//	printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
+
+//	printf("%s\n",e);
+
+	free(uts);
+}
+
+void send_menu_choice(int socket, char choice, read_cb readfunction){
+
+
+	size_t payload_length = sizeof(char);
+
+	//printf("payload_length is: %zu (%zu bytes)\n", payload_length, payload_length);
+
+	    // SEND THE VALUE OF INT
+	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));	
+	writen(socket, (unsigned char *) &choice, payload_length);
+
+	// CALLBACK DEPENDING ON DATA
+	readfunction(socket);
+
+/*	if(choice=='3'){
+	read_server_details(socket);
+	} else {
+
+	read_string(socket);*/
+}
+
+/*	payload_length = sizeof(size_t);
+	size_t n =readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
+
+	printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
+
+	char *e = malloc(sizeof(char)*payload_length);
+
+	n = readn(socket, (unsigned char *) e, payload_length);
+
+	printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
+
+	printf("%s\n",e);
+
+free(e);*/
+
 
 // how to receive a string
 void get_hello(int socket)
@@ -88,11 +147,13 @@ void get_hello(int socket)
 void displaymenu()
 {
     
-	printf("0. Display menu\n");
-	printf("(1.) Get Student Information \n");
-    printf("2. Second option\n");
-    printf("3. Third option\n");
-    printf("4. Exit\n");
+	printf("[0]\tDisplay menu\n");
+	printf("-------------------\n");
+	printf("[1]\tGet Student Information \n");
+	printf("[2]\tGet server timestamp\n");
+	printf("[3]\tGet server information\n");
+	printf("[4] Exit\n");
+
 }
 
 int main(void)
@@ -145,17 +206,17 @@ char input;
 	    displaymenu();
 	    break;
 	case '1':
-	printf("MENU ONE");
-//send_menu_choice(sockfd, '1');
+	//printf("MENU ONE");
+	send_menu_choice(sockfd, '1',read_string);
 	    break;
 	case '2':
-send_menu_choice(sockfd, '2');
+send_menu_choice(sockfd, '2',read_string);
 	    break;
 	case '3':
-send_menu_choice(sockfd, '3');
+send_menu_choice(sockfd, '3',read_server_details);
 	    break;
 	case '4':
-	send_menu_choice(sockfd, '4');
+	send_menu_choice(sockfd, '4',read_string);
 	//sleep(4);
 	    printf("Goodbye!\n");
 	    break;
