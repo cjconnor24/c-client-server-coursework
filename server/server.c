@@ -15,7 +15,7 @@
 #include <sys/types.h>
 #include <pthread.h>
 #include "rdwrn.h"
-
+#include <sys/utsname.h>
 
 
 // thread function
@@ -121,9 +121,11 @@ void send_student_info(int socket){
 
 	//send_string(&socket,response);
 
-	size_t payload_length = strlen(response)+1;
-	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
-	writen(socket, (unsigned char *)response, payload_length);
+	//printf("SENDING ACROSS: %s //EOL\n",response);
+	send_string(socket,response);
+	//size_t payload_length = strlen(response)+1;
+	//writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
+	//writen(socket, (unsigned char *)response, payload_length);
 
 	free(ipaddress);
 	free(response);
@@ -133,7 +135,14 @@ void send_string(int socket, char *response){
 
 	size_t payload_length = strlen(response);
 
+	// TEMP DEBUG
+	printf("PAYLOAD: %s //EOL%zu\n",response,payload_length);
+
 	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
+	
+	// TEMP DEBUG
+	printf("DATA: %s //EOL%zu\n",response,payload_length);
+
 	writen(socket, (unsigned char *)response, payload_length);
 
 }
@@ -161,6 +170,24 @@ char *get_ip_address(){
     //printf("%s\n", inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
 
 	return ipaddress;
+
+}
+
+void get_server_details(){
+
+    struct utsname uts;
+
+    if (uname(&uts) == -1) {
+	printf("This did not work");
+	//perror("uname error");
+	//exit(EXIT_FAILURE);
+    }
+
+    printf("Node name:    %s\n", uts.nodename);
+    printf("System name:  %s\n", uts.sysname);
+    printf("Release:      %s\n", uts.release);
+    printf("Version:      %s\n", uts.version);
+    printf("Machine:      %s\n", uts.machine);
 
 }
 
@@ -212,13 +239,18 @@ do {
 
 	case '2':
 	printf("SEND THE TIME\n");
+	char *time = get_time();
 	//send_student_info(connfd);
-	send_string(connfd,get_time());
+	send_string(connfd,time);
 	break;
-
+	case '3':
+	get_server_details();
+	send_student_info(connfd);
+	break;
 	default:
 	printf("DEFAULT MENU\n");
 	send_student_info(connfd);
+	//break;
 	//send_string(connfd,"NO OPTION THIS IS DEFAULT");
 	}
 

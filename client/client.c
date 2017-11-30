@@ -45,19 +45,25 @@ void send_menu_choice(int socket, char choice){
 
 	size_t payload_length = sizeof(char);
 
-printf("payload_length is: %zu (%zu bytes)\n", payload_length, payload_length);
+	//printf("payload_length is: %zu (%zu bytes)\n", payload_length, payload_length);
 
 	    // SEND THE VALUE OF INT
-    writen(socket, (unsigned char *) &payload_length, sizeof(size_t));	
-    writen(socket, (unsigned char *) &choice, payload_length);
+	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));	
+	writen(socket, (unsigned char *) &choice, payload_length);
 
-	readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
+	payload_length = sizeof(size_t);
+	size_t n =readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
 
-char *e = (char *)malloc(sizeof(char)*payload_length);
+	printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
 
-	readn(socket, (unsigned char *) e, payload_length);
+	char *e = (char *)malloc(sizeof(char)*payload_length);
 
-	printf("The value back was: %s\n",e);
+	n = readn(socket, (unsigned char *) e, payload_length);
+
+	printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
+//	printf("PAYLOAD: %s //EOL%zu\n",payload_length,n);
+
+	printf("%s\n",e);
 
 free(e);
 
