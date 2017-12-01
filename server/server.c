@@ -391,10 +391,11 @@ char *get_file_list(){
     int n;
 
 
-	if ((n = scandir("./upload/", &namelist, NULL, alphasort)) == -1){
-        	perror("scandir");
-		return "";
-	} else {
+
+	if ((n = scandir("./upload/", &namelist, NULL, alphasort)) != -1){
+  //      	perror("scandir");
+//		return "";
+//	} else {
 
 	//printf("There are %d files in the dir\n",n);
 
@@ -403,18 +404,27 @@ char *get_file_list(){
 	size_t memallocation = sizeof(char)*2048;
 	char *list = (char *)malloc(memallocation);
 	memset(list,'\0',memallocation);
+
+//	char **dir_array = (char **)malloc(sizeof(char **)+1);
+
+
 	//strcpy(filelist,"");
+//	int i;
+//	for(i = 0; i < n; i++){
+
         while (n--) {
-
-
 //	printf("%s\n",namelist[n]->d_name);
+//	*dir_array[i] = (char *)malloc(strlen(namelist[n]->d_name)+1);
+	//strcpy(*dir_array[i],namelist[n]->d_name);
 
-	// TRY AND COPY INTO STRING
-	strcat(list,namelist[n]->d_name);
-	strcat(list,"\n");
-	free(namelist[n]);
+	// TRY AND COPY INTO STRING - THE BELOW WORKS
+		strcat(list,namelist[n]->d_name);
+		strcat(list,"\n");
+		free(namelist[n]);
+
         }
-
+	
+	// MOVE PRECISE STRING INTO NEW MEMORY - THEN RELEASE THE BUFFER AREA
 	size_t list_length = strlen(list);
 	char *sized_list = (char *)malloc(list_length+1);
 	strcpy(sized_list,list);
@@ -431,7 +441,13 @@ char *get_file_list(){
 	return sized_list;
         free(namelist);         //NB
 	namelist = NULL;
-    }
+
+} else {
+
+	return "No files.";
+
+}
+
 
 
 }
