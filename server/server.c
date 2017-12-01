@@ -66,21 +66,20 @@ int main(void)
     //Accept and incoming connection
     puts("Waiting for incoming connections...");
     while (1) {
+
 	printf("Waiting for a client to connect...\n");
-	connfd =
-	    accept(listenfd, (struct sockaddr *) &client_addr, &socksize);
+	connfd = accept(listenfd, (struct sockaddr *) &client_addr, &socksize);
 	printf("Connection accepted...\n");
 
 	pthread_t sniffer_thread;
         // third parameter is a pointer to the thread function, fourth is its actual parameter
-	if (pthread_create
-	    (&sniffer_thread, NULL, client_handler,
-	     (void *) &connfd) < 0) {
+	if (pthread_create(&sniffer_thread, NULL, client_handler,(void *) &connfd) < 0) {
 	    perror("could not create thread");
 	    exit(EXIT_FAILURE);
 	}
+
 	//Now join the thread , so that we dont terminate before the thread
-	//pthread_join( sniffer_thread , NULL);
+	pthread_join( sniffer_thread , NULL);
 	printf("Handler assigned\n");
     }
 
