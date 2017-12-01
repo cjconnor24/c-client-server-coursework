@@ -204,24 +204,28 @@ struct utsname *get_server_details(){
 
 }
 
-void send_file_list(int socket, struct dirent *filelist){
+void send_file_list(int socket){
 
-	size_t payload_length = sizeof(struct dirent);
+	char *filelist = get_file_list();
+
+	send_string(socket,filelist);
+//	size_t payload_length = (sizeof(char)*strlen(filelist))+1;
 
 	// TEMP DEBUG
 	//printf("PAYLOAD: %s //EOL%zu\n",uts,payload_length);
 
-	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
+//	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
 	
 	// TEMP DEBUG
 	//printf("DATA: %s //EOL%zu\n",uts,payload_length);
 
-	writen(socket, (unsigned char *)filelist, payload_length);
+//	writen(socket, (unsigned char *)filelist, payload_length);
 	// FREE UTS ONCE SENT
 	free(filelist);
 }
-void send_server_details(int socket, struct utsname *uts){
+void send_server_details(int socket){
 
+	struct utsname *uts = get_server_details();
 	size_t payload_length = sizeof(struct utsname);
 
 	// TEMP DEBUG
@@ -300,12 +304,12 @@ do {
 	}
 	case '3':
 	printf("Sending server details\n");
-	send_server_details(connfd,get_server_details());
+	send_server_details(connfd);
 	break;
 	case '4':
 	{
 	printf("Sending file list...\n");
-	send_string(connfd,get_file_list());
+	send_file_list(connfd);
 	//free(filelist);
 	break;
 	}
@@ -397,41 +401,37 @@ char *get_file_list(){
 
 	// TRY SETTING SPACE FOR 2 CHARS
 	//char *filelist = (char *)malloc(sizeof(char)*2);
+	size_t memallocation = sizeof(char)*2048;
+	char *list = (char *)malloc(memallocation);
+	memset(list,'\0',memallocation);
 	//strcpy(filelist,"");
         while (n--) {
 
 
-	printf("%s\n",namelist[n]->d_name);
+//	printf("%s\n",namelist[n]->d_name);
+
+	// TRY AND COPY INTO STRING
+	strcat(list,namelist[n]->d_name);
+	strcat(list,"\n");
 	free(namelist[n]);
-	/*char *new = namelist[n]->d_name;
-	size_t oldlen = strlen(filelist);
-	size_t newlen = strlen(new);
-	size_t newstringlen = oldlen+newlen+1;*/
-
-	// RESIZE THE LIST TO MAKE IT LARGER
-	//char *temp = (char *)realloc(filelist,sizeof(char)*newstringlen);
-	
-	// CHECK TO ENSURE REALLOC WAS SUCCESSFUL
-	/*if(!temp){
-	// ERROR
-	free(temp);
-	printf("Erro with realloc");
-	} else {
-	// THEN COPY THE FILE AND ADD A NEW LINE
-	strcat(filelist,new);
-	strcat(filelist,"\n");
-	}
-
-
-            free(namelist[n]);  //NB
-	*/
         }
 
+	size_t list_length = strlen(list);
+	char *sized_list = (char *)malloc(list_length+1);
+	strcpy(sized_list,list);
+	free(list);
+	list = NULL;
+
+	// DEBUG LEAKING MEM
+	//free(n);
+	n = 0;
 	//printf("The list:%s\n",filelist);
 	//free(filelist);
 	//return filelist;
-	return "Temp";
+	printf("Sized List:\n%s\n",sized_list);
+	return sized_list;
         free(namelist);         //NB
+	namelist = NULL;
     }
 
 
