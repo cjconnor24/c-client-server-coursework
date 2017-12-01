@@ -40,7 +40,7 @@ void stat_file(char *file);
 char *get_file_list();
 char *build_list(char *old, char *new);
 
-// you shouldn't need to change main() in the server except the port number
+// you shouldn't need to change ain() in the server except the port number
 int main(void)
 {
     int listenfd = 0, connfd = 0;
@@ -81,6 +81,8 @@ int main(void)
 	//Now join the thread , so that we dont terminate before the thread
 	pthread_join( sniffer_thread , NULL);
 	printf("Handler assigned\n");
+
+	//TODO: SIGNAL HANDLER
     }
 
     // never reached...
@@ -346,7 +348,7 @@ free(menu_choice);
 
     // always clean up sockets gracefully
     shutdown(connfd, SHUT_RDWR);
-    close(connfd);
+ i  close(connfd);
 
     return 0;
 }  // end client_handler()
