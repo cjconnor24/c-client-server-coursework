@@ -305,9 +305,8 @@ do {
 	case '4':
 	{
 	printf("Sending file list...\n");
-	char *filelist = get_file_list();
-	send_string(connfd,filelist);
-	free(filelist);
+	send_string(connfd,get_file_list());
+	//free(filelist);
 	break;
 	}
 	default:
@@ -396,21 +395,24 @@ char *get_file_list(){
 
 	//printf("There are %d files in the dir\n",n);
 
-	char *filelist = malloc(1);
-	strcpy(filelist,"");
+	// TRY SETTING SPACE FOR 2 CHARS
+	//char *filelist = (char *)malloc(sizeof(char)*2);
+	//strcpy(filelist,"");
         while (n--) {
 
 
-	char *new = namelist[n]->d_name;
+	printf("%s\n",namelist[n]->d_name);
+	free(namelist[n]);
+	/*char *new = namelist[n]->d_name;
 	size_t oldlen = strlen(filelist);
 	size_t newlen = strlen(new);
-	size_t newstringlen = oldlen+newlen+1;
+	size_t newstringlen = oldlen+newlen+1;*/
 
 	// RESIZE THE LIST TO MAKE IT LARGER
-	char *temp = realloc(filelist,sizeof(char)*newstringlen);
+	//char *temp = (char *)realloc(filelist,sizeof(char)*newstringlen);
 	
 	// CHECK TO ENSURE REALLOC WAS SUCCESSFUL
-	if(!temp){
+	/*if(!temp){
 	// ERROR
 	free(temp);
 	printf("Erro with realloc");
@@ -422,11 +424,13 @@ char *get_file_list(){
 
 
             free(namelist[n]);  //NB
+	*/
         }
 
 	//printf("The list:%s\n",filelist);
 	//free(filelist);
-	return filelist;
+	//return filelist;
+	return "Temp";
         free(namelist);         //NB
     }
 
