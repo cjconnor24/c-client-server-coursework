@@ -62,6 +62,9 @@ void read_string(int socket){
 
 	printf("%s\n",result);
 
+	// WIPE MEMORY, FOR SOME REASON THIS IS PERSISTING
+	memset(result,'\0',payload_length);
+
 	free(result);
 }
 
@@ -75,16 +78,11 @@ void read_server_details(int socket){
 	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
 
 	struct utsname *uts = malloc(sizeof(struct utsname));
+//	payload_length = sizeof(struct utsname);
 
 	//n = 
 	readn(socket, (unsigned char *) uts, payload_length);
 
-/*    if (uname(uts) == -1) {
-        printf("This did not work");
-        //perror("uname error");
-        //exit(EXIT_FAILURE);
-        return NULL;
-    }*/
 
     printf("Node name:    %s\n", uts->nodename);
     printf("System name:  %s\n", uts->sysname);
@@ -95,6 +93,7 @@ void read_server_details(int socket){
 //	printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
 
 //	printf("%s\n",e);
+//	memset(uts,'\0',payload_length);
 
 	free(uts);
 }
@@ -162,7 +161,11 @@ void displaymenu()
 	printf("[6] Exit\n");
 
 }
+void display_heading(char *message){
 
+printf("\n%s\n-------------------\n",message);
+
+}
 int main(void)
 {
     // *** this code down to the next "// ***" does not need to be changed except the port number
@@ -214,15 +217,19 @@ char input;
 	    break;
 	case '1':
 	//printf("MENU ONE");
+	display_heading("Student Information");
 	send_menu_choice(sockfd, '1',read_string);
 	    break;
 	case '2':
+	display_heading("Server Timestamp");
 send_menu_choice(sockfd, '2',read_string);
 	    break;
 	case '3':
-send_menu_choice(sockfd, '3',read_server_details);
+	display_heading("Server Information");
+	send_menu_choice(sockfd, '3',read_server_details);
 	    break;
 	case '4':
+	display_heading("Server File List");
 	send_menu_choice(sockfd, '4',read_string);
 	//sleep(4);
 //	    printf("Goodbye!\n");

@@ -389,7 +389,7 @@ char *get_file_list(){
     int n;
 
 
-	if ((n = scandir(".", &namelist, NULL, alphasort)) == -1){
+	if ((n = scandir("./upload/", &namelist, NULL, alphasort)) == -1){
         	perror("scandir");
 		return "";
 	} else {
