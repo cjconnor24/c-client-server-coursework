@@ -47,25 +47,25 @@ void send_and_get_employee(int socket, employee *e)
 void read_string(int socket){
 
 	size_t payload_length = sizeof(size_t);
-	//size_t n =
-	readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
+	size_t n = readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
 
 	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
 
-	char *result = malloc(sizeof(char)*payload_length);
-//	result = 0;
+	// CALCULATE AND ALLOCATE MEMORY FOR THE RESULT
+	size_t memallocation = (sizeof(char)*payload_length)+1;
+	char *result = (char *)malloc(memallocation);
 	
-	//n = 
-	readn(socket, (unsigned char *) result, payload_length);
+	// INITIALISE EVERY PART OF MEM - WITHOUT WAS CAUSING VALG ISSUES
+	memset(result,'\0',memallocation);
+	
+	n =readn(socket, (unsigned char *) result, payload_length);
 
 	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
 
 	printf("%s\n",result);
 
-	// WIPE MEMORY, FOR SOME REASON THIS IS PERSISTING
-	memset(result,'\0',payload_length);
-
 	free(result);
+	result = NULL;
 }
 
 void read_server_details(int socket){
@@ -96,6 +96,7 @@ void read_server_details(int socket){
 //	memset(uts,'\0',payload_length);
 
 	free(uts);
+	uts = NULL;
 }
 
 void send_menu_choice(int socket, char choice, read_cb readfunction){
