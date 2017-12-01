@@ -47,18 +47,22 @@ void send_and_get_employee(int socket, employee *e)
 void read_string(int socket){
 
 	size_t payload_length = sizeof(size_t);
-	size_t n = readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
+	//size_t 
+	readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
 
 	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
 
 	// CALCULATE AND ALLOCATE MEMORY FOR THE RESULT
 	size_t memallocation = (sizeof(char)*payload_length)+1;
 	char *result = (char *)malloc(memallocation);
+
+	if(result!=NULL){
 	
 	// INITIALISE EVERY PART OF MEM - WITHOUT WAS CAUSING VALG ISSUES
 	memset(result,'\0',memallocation);
 	
-	n =readn(socket, (unsigned char *) result, payload_length);
+	//n =
+	readn(socket, (unsigned char *) result, payload_length);
 
 	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
 
@@ -66,6 +70,9 @@ void read_string(int socket){
 
 	free(result);
 	result = NULL;
+
+	}
+
 }
 
 void read_server_details(int socket){
@@ -80,23 +87,27 @@ void read_server_details(int socket){
 	struct utsname *uts = malloc(sizeof(struct utsname));
 //	payload_length = sizeof(struct utsname);
 
+	// MAKE SURE THE STRUCT ISN'T NULL BEFORE DOING SOMETHING WITH IT	
+	if(uts!=NULL){
+
 	//n = 
 	readn(socket, (unsigned char *) uts, payload_length);
 
 
-    printf("Node name:    %s\n", uts->nodename);
-    printf("System name:  %s\n", uts->sysname);
-    printf("Release:      %s\n", uts->release);
-    printf("Version:      %s\n", uts->version);
-    printf("Machine:      %s\n", uts->machine);
-
+	    printf("Node name:    %s\n", uts->nodename);
+	    printf("System name:  %s\n", uts->sysname);
+	    printf("Release:      %s\n", uts->release);
+	    printf("Version:      %s\n", uts->version);
+	    printf("Machine:      %s\n", uts->machine);
+	
 //	printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
 
-//	printf("%s\n",e);
-//	memset(uts,'\0',payload_length);
-
+	//FREE UP THE STRUCT
 	free(uts);
 	uts = NULL;
+
+	}
+
 }
 
 void send_menu_choice(int socket, char choice, read_cb readfunction){
