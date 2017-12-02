@@ -27,7 +27,6 @@
 // thread function
 void *client_handler(void *);
 
-void get_and_send_employee(int, employee *);
 void send_hello(int);
 char *get_ip_address();
 void send_string(int socket, char *response);
