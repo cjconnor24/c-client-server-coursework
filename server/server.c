@@ -21,6 +21,7 @@
 #include <sys/types.h>
 #include <time.h>
 #include <sys/stat.h>
+#include <signal.h>
 
 // thread function
 void *client_handler(void *);
@@ -40,9 +41,32 @@ void stat_file(char *file);
 char *get_file_list();
 char *build_list(char *old, char *new);
 
+// SIGNAL HANDLER
+static void handler(int sig, siginfo_t *siginfo, void *context)
+{
+	//printf("The signal no was %d\n",sig);
+	//printf("PID: %ld, UID: %ld\n",
+	//(long) siginfo->si_pid, (long) siginfo->si_uid);
+}
+
+// SET TIMER TO CURRENT TIME VALUE
+void set_timer(struct timeval *timer){
+
+	if (gettimeofday(timer, NULL) == -1) {
+		perror("gettimeofday error");
+		exit(EXIT_FAILURE);
+	}
+
+}
+
 // you shouldn't need to change ain() in the server except the port number
 int main(void)
 {
+
+	// CREATE TIMERS FOR CALCULATING EXECUTION TIME
+	struct timeval start_time, end_time;
+	set_timer(&start_time);
+
     int listenfd = 0, connfd = 0;
 
     struct sockaddr_in serv_addr;
@@ -62,6 +86,22 @@ int main(void)
 	exit(EXIT_FAILURE);
     }
     // end socket setup
+	//TODO: SIGNAL HANDLER
+/*	struct sigaction act;
+	memset(&act, '\0', sizeof(act));
+
+	// this is a pointer to a function
+	act.sa_sigaction = &handler;
+	// the SA_SIGINFO flag tells sigaction() to use the sa_sigaction field, not sa_handler
+	act.sa_flags = SA_SIGINFO;
+
+	// HANDLE SIGINT
+	if (sigaction(SIGINT, &act, NULL) == -1) {
+		perror("sigaction");
+		exit(EXIT_FAILURE);
+	}*/
+
+	//TODO: TIME TO SEE HOW LONG SERVER HAS BEEN RUNNING
 
     //Accept and incoming connection
     puts("Waiting for incoming connections...");
@@ -69,6 +109,8 @@ int main(void)
 
 	printf("Waiting for a client to connect...\n");
 	connfd = accept(listenfd, (struct sockaddr *) &client_addr, &socksize);
+
+
 	printf("Connection accepted...\n");
 
 	pthread_t sniffer_thread;
@@ -81,8 +123,12 @@ int main(void)
 	//Now join the thread , so that we dont terminate before the thread
 	pthread_join( sniffer_thread , NULL);
 	printf("Handler assigned\n");
+	
+	// THIS NEED TO BE INSIDE A HANDLER FOR SIGNAL
+	set_timer(&end_time);
+	printf("Total execution time = %f seconds\n",(double)(end_time.tv_usec - start_time.tv_usec) / 1000000 + (double)(end_time.tv_sec - start_time.tv_sec));
 
-	//TODO: SIGNAL HANDLER
+
     }
 
     // never reached...
