@@ -18,8 +18,68 @@
 
 // CREATING TO ALLOW CALLBACK
 typedef void (*read_cb)(int socket);
+void send_string(int socket,char* response);
+void read_string(int socket);
+void send_menu_choice(int socket, char choice, read_cb readfunction);
 
-// READ STRING FROM SERVER
+void read_get_file(int socket){
+
+	//TODO: READ WHICH FILE WOULD YOU LIKE
+	size_t payload_length = sizeof(size_t);
+	readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
+
+	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);//DEBUG
+
+	// CALCULATE AND ALLOCATE MEMORY FOR THE RESULT
+	size_t memallocation = (sizeof(char)*payload_length)+1;
+	char *result = (char *)malloc(memallocation);
+
+	if(result!=NULL){
+	
+	// INITIALISE EVERY PART OF MEM - WITHOUT WAS CAUSING VALG ISSUES
+	memset(result,'\0',memallocation);
+	
+	readn(socket, (unsigned char *) result, payload_length);
+
+	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);//DEBUG
+	printf("WE REACH READ GET FILE");
+	// PRINT STRING TO CONSOLE
+	printf("%s\n",result);
+
+			send_menu_choice(socket, '7',read_string);
+	send_string(socket,"fixed.txt");
+	
+	
+	//TODO: SEND THE FILE
+	//TODO: READ THE RESPONSE
+
+	// FREE UP THE RESULT
+	free(result);
+	result = NULL;
+
+	}
+	
+
+}
+
+// REUSABLE FUNCTION TO SEND A STRING BACK TO CLIENT
+void send_string(int socket, char *response){
+
+        size_t payload_length = strlen(response);
+
+        //printf("PAYLOAD: %s //EOL%zu\n",response,payload_length);//DEBUG
+
+        writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
+
+        //printf("DATA: %s //EOL%zu\n",response,payload_length);//dEBUG
+
+        writen(socket, (unsigned char *)response, payload_length);
+
+//      free(response);
+
+}
+
+// READ STRING FROM SERVE
 void read_string(int socket){
 
 	size_t payload_length = sizeof(size_t);
@@ -231,7 +291,8 @@ char input;
 			send_menu_choice(sockfd, '4',read_string);
 			break;
 		case '5':
-			get_file_name();
+			send_menu_choice(sockfd,'5',read_get_file);
+			//get_file_name();
 			//printf("Retrieve file list\n");
 			//display_heading("Server File List");
 			//send_menu_choice(sockfd, '4',read_string);

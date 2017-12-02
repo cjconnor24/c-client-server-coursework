@@ -249,8 +249,16 @@ void send_file_list(int socket){
 	// GET THE CURRENT FILE LIST
 	char *filelist = get_file_list();
 
+	if(filelist!=NULL){
+
 	// SEND STRING ACROSS TO CLIENT
 	send_string(socket,filelist);
+
+	} else {
+
+	send_string(socket,"No files");
+
+	}
 
 	// FREE UP THE FILELIST MEMORY
 	free(filelist);
@@ -259,118 +267,6 @@ void send_file_list(int socket){
 	filelist=NULL;
 
 }
-
-// SEND THE UTSNAME STRUCT ACCROSS TO CLIENT
-void send_server_details(int socket){
-
-	// GET THE STRUCT
-	struct utsname *uts = get_server_details();
-	size_t payload_length = sizeof(struct utsname);
-
-	//printf("PAYLOAD: %s //EOL%zu\n",uts,payload_length);//DEBUG
-
-	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
-	
-	//printf("DATA: %s //EOL%zu\n",uts,payload_length);//DEBUG
-
-	writen(socket, (unsigned char *)uts, payload_length);
-	// FREE UTS ONCE SENT
-	free(uts);
-	
-	// EXTRA SECURITY
-	uts=NULL;
-}
-
-// RETRIEVE MENU CHOICE FROM CLIENT
-void get_menu_choice(int socket, char *choice){
-
-	
-	size_t payload_length = sizeof(char);
-	
-	// READ PAYLOAD AND DATA FROM CLIENT
-	readn(socket, (unsigned char *) &payload_length, sizeof(size_t));
-	readn(socket, (unsigned char *) choice, payload_length);
-
-}
-
-// THREAD FUNCTION TO ENCOMPASS ALL FUNCTIONALITY
-void *client_handler(void *socket_desc)
-{
-	//Get the socket descriptor
-	int connfd = *(int *) socket_desc;
-
-	// SEND WELCOME MESSAGE
-	send_hello(connfd);
-
-	// CREATE A SPACE FOR THE MENU CHOICE
-	char *menu_choice = (char *)malloc(sizeof(char));
-
-	// LOOP UNTIL EXIT CHOICE IS RECEIVED
-	do {
-	
-		// GET MENU CHOICE AND SET THE CHOICE POINTER
-		get_menu_choice(connfd,menu_choice);
-
-		switch(*menu_choice) {
-
-		case '1':
-			printf("Sending Student Info\n");
-			send_student_info(connfd);
-		break;
-		case '2':
-		{
-			//TODO: MAKE SURE TIME IS FREED
-			printf("Sending the time...\n");
-			char *time = get_time();
-			send_string(connfd,time);
-			//free(time);
-		break;
-		}
-		case '3':
-			printf("Sending server details\n");
-			send_server_details(connfd);
-		break;
-		case '4':
-		{
-			printf("Sending file list...\n");
-			send_file_list(connfd);
-		break;
-		}
-		default:
-			send_string(connfd,"Goodbye...");
-		break;
-	}
-
-	} while(*menu_choice!='6');
-
-	// FREE UP THE MEMORY CHOICE CHAR
-	free(menu_choice);
-
-
-	shutdown(connfd, SHUT_RDWR);
-	close(connfd);
-
-	printf("Thread %lu has exited.\n", (unsigned long) pthread_self());
-
-	// always clean up sockets gracefully
-	shutdown(connfd, SHUT_RDWR);
-	close(connfd);
-
-	pthread_exit(NULL);
-
-    return 0;
-}  // end client_handler()
-
-// how to send a string
-void send_hello(int socket)
-{
-    char hello_string[] = "hello SP student";
-
-    size_t n = strlen(hello_string) + 1;
-    writen(socket, (unsigned char *) &n, sizeof(size_t));	
-    writen(socket, (unsigned char *) hello_string, n);	  
-} // end send_hello()
-
 
 // GET SERVER FILE LIST
 char *get_file_list(){
@@ -425,10 +321,164 @@ char *get_file_list(){
 
 } else {
 
-	return "No files.";
+	
+	return NULL;
 
 }
 
 
 
 }
+// SEND THE UTSNAME STRUCT ACCROSS TO CLIENT
+void send_server_details(int socket){
+
+	// GET THE STRUCT
+	struct utsname *uts = get_server_details();
+	size_t payload_length = sizeof(struct utsname);
+
+	//printf("PAYLOAD: %s //EOL%zu\n",uts,payload_length);//DEBUG
+
+	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
+	
+	//printf("DATA: %s //EOL%zu\n",uts,payload_length);//DEBUG
+
+	writen(socket, (unsigned char *)uts, payload_length);
+	// FREE UTS ONCE SENT
+	free(uts);
+	
+	// EXTRA SECURITY
+	uts=NULL;
+}
+
+// RETRIEVE MENU CHOICE FROM CLIENT
+void get_menu_choice(int socket, char *choice){
+
+	
+	size_t payload_length = sizeof(char);
+	
+	// READ PAYLOAD AND DATA FROM CLIENT
+	readn(socket, (unsigned char *) &payload_length, sizeof(size_t));
+	readn(socket, (unsigned char *) choice, payload_length);
+
+}
+
+// READ STRING FROM SERVE
+void read_string(int socket){
+
+        size_t payload_length = sizeof(size_t);
+        readn(socket, (unsigned char *) &payload_length, sizeof(size_t));
+
+        //printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);//DEBUG
+
+        // CALCULATE AND ALLOCATE MEMORY FOR THE RESULT
+        size_t memallocation = (sizeof(char)*payload_length)+1;
+        char *result = (char *)malloc(memallocation);
+
+        if(result!=NULL){
+
+        // INITIALISE EVERY PART OF MEM - WITHOUT WAS CAUSING VALG ISSUES
+        memset(result,'\0',memallocation);
+
+        readn(socket, (unsigned char *) result, payload_length);
+
+        //printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);//DEBUG
+
+        // PRINT STRING TO CONSOLE
+        printf("%s\n",result);
+
+        // FREE UP THE RESULT
+        free(result);
+        result = NULL;
+
+        }
+
+}
+
+// THREAD FUNCTION TO ENCOMPASS ALL FUNCTIONALITY
+void *client_handler(void *socket_desc)
+{
+	//Get the socket descriptor
+	int connfd = *(int *) socket_desc;
+
+	// SEND WELCOME MESSAGE
+	send_hello(connfd);
+
+	// CREATE A SPACE FOR THE MENU CHOICE
+	char *menu_choice = (char *)malloc(sizeof(char));
+
+	// LOOP UNTIL EXIT CHOICE IS RECEIVED
+	do {
+	
+		// GET MENU CHOICE AND SET THE CHOICE POINTER
+		get_menu_choice(connfd,menu_choice);
+
+		switch(*menu_choice) {
+
+		case '1':
+			printf("Sending Student Info\n");
+			send_student_info(connfd);
+		break;
+		case '2':
+		{
+			//TODO: MAKE SURE TIME IS FREED
+			printf("Sending the time...\n");
+			char *time = get_time();
+			send_string(connfd,time);
+			//free(time);
+		break;
+		}
+		case '3':
+			printf("Sending server details\n");
+			send_server_details(connfd);
+		break;
+		case '4':
+		{
+			printf("Sending file list...\n");
+			send_file_list(connfd);
+		break;
+		}
+		case '5':
+			printf("Client want's file\n");
+			send_string(connfd,"Which file would you like?");
+		break;
+		case '7':
+			printf("The client has sent the string\n");
+			read_string(connfd);
+			send_string(connfd,"Which file would you like?");
+		break;
+		default:
+			send_string(connfd,"Sorry, I didn't recognise that option");
+		break;
+	}
+
+	} while(*menu_choice!='6');
+
+	// FREE UP THE MEMORY CHOICE CHAR
+	free(menu_choice);
+
+
+	shutdown(connfd, SHUT_RDWR);
+	close(connfd);
+
+	printf("Thread %lu has exited.\n", (unsigned long) pthread_self());
+
+	// always clean up sockets gracefully
+	shutdown(connfd, SHUT_RDWR);
+	close(connfd);
+
+	pthread_exit(NULL);
+
+    return 0;
+}  // end client_handler()
+
+// how to send a string
+void send_hello(int socket)
+{
+    char hello_string[] = "hello SP student";
+
+    size_t n = strlen(hello_string) + 1;
+    writen(socket, (unsigned char *) &n, sizeof(size_t));	
+    writen(socket, (unsigned char *) hello_string, n);	  
+} // end send_hello()
+
+
