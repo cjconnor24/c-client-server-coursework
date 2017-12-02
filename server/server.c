@@ -78,9 +78,6 @@ int main(void)
 	perror("Failed to listen");
 	exit(EXIT_FAILURE);
     }
-    // end socket setup
-
-	//TODO: TIME TO SEE HOW LONG SERVER HAS BEEN RUNNING
 
     //Accept and incoming connection
     puts("Waiting for incoming connections...");
@@ -321,7 +318,6 @@ char *get_file_list(){
 	struct dirent **namelist;
 	int n;
 	
-	//TODO: FIND WHERE THE LEAK IS HERE :-|
 	if ((n = scandir("./upload/", &namelist, NULL, alphasort)) != -1){
   //      	perror("scandir");
 //		return "";
