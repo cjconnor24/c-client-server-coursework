@@ -2,7 +2,8 @@
 *.d
 # SWAP FILES
 *.swp
-
+client/client
+server/server
 # Object files
 *.o
 *.ko
