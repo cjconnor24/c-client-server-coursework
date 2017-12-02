@@ -119,13 +119,13 @@ int main(void)
 	printf("--------------------\n");
 
 
-	//pthread_join( sniffer_thread , NULL);
 	
 	// THIS NEED TO BE INSIDE A HANDLER FOR SIGNAL
 	set_timer(&end_time);
 	printf("Total execution time = %f seconds\n",(double)(end_time.tv_usec - start_time.tv_usec) / 1000000 + (double)(end_time.tv_sec - start_time.tv_sec));
 
 
+	pthread_join( sniffer_thread , NULL);
     }
 
     // never reached...
@@ -165,7 +165,7 @@ void send_student_info(int socket){
 	
 	// ALLOCATE THE MEMORY AND COPY IN THE FORMATTED STRING
 	char *response = malloc(sizeof(char)*100);
-	snprintf(response,100,"%s,%s,%s",name,sid,(char *)ipaddress);
+	snprintf(response,100,"%s\n%s\n%s",name,sid,(char *)ipaddress);
 
 	// SEND THE DATA
 	send_string(socket,response);
@@ -243,6 +243,52 @@ struct utsname *get_server_details(){
 
 }
 
+int file_exists(char *filename){
+
+FILE * file;
+
+char folder[] = "./upload/";
+size_t strsize =(sizeof(char)*(strlen(filename)+strlen(folder)+1));
+char *full_path = (char *)malloc(strsize);
+
+memset(full_path,'\0',strsize);
+
+snprintf(full_path,strsize,"%s%s",folder,filename);
+printf("Full path: %s",full_path);
+
+file = fopen(full_path,"r");
+int result;
+if (file){
+
+	//DON'T DO ANYTHING, JUST CHECKING FOR PERMISSIONS
+	fclose(file);
+	result = 1;
+
+} else {
+
+	result = 0;
+
+}
+
+// MAKE SURE NOT NULL BEFORE FREEING MEMORY
+if(full_path!=NULL){
+
+	free(full_path);
+	full_path = 0;
+
+}
+
+/*if(file!=NULL){
+
+	free(file);
+	file = 0;
+
+}*/
+
+return result;
+
+}
+
 // SEND THE SERVER FILE LIST BACK TO CLIENT
 void send_file_list(int socket){
 
@@ -315,10 +361,10 @@ char *get_file_list(){
 	//free(filelist);
 	//return filelist;
 	printf("Sized List:\n%s\n",sized_list);
-	return sized_list;
         free(namelist);         //NB
 	namelist = NULL;
 
+	return sized_list;
 } else {
 
 	
@@ -449,7 +495,25 @@ void *client_handler(void *socket_desc)
 			send_string(connfd,"Which file would you like?");
 			char *filename = read_string(connfd);
 			printf("The client requested: %s\n",filename);
-			send_string(connfd,filename);
+
+			char response[255];
+			memset(response,'\0',255);
+
+			// CHECK TO SEE IF THE FILE EXISTS
+			if(file_exists(filename)){
+
+				strcat(response,filename);
+				strcat(response," Exists");
+
+			} else {
+
+				strcat(response,filename);
+				strcat(response," Doesn't Exist");
+				//printf("IT DOESNT EXISTS\n");
+
+			}
+
+			send_string(connfd,response);
 			free(filename);
 		break;
 		case '7':
