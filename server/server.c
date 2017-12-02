@@ -90,24 +90,24 @@ int main(void)
     exit(EXIT_SUCCESS);
 } // end main()
 
+
+// GET SYSTEM TIME
 char *get_time(){
 
-   time_t t;    // always look up the manual to see the error conditions
-    //  here "man 2 time"
-    if ((t = time(NULL)) == -1) {
-        perror("time error");
-        exit(EXIT_FAILURE);
-    }
+	time_t t;
 
-    // localtime() is in standard library so error conditions are
-    //  here "man 3 localtime"
-    struct tm *tm;
-    if ((tm = localtime(&t)) == NULL) {
-        perror("localtime error");
-        exit(EXIT_FAILURE);
-    }
+	if ((t = time(NULL)) == -1) {
+	perror("time error");
+	//exit(EXIT_FAILURE);
+	}
 
-    //printf("%s", asctime(tm));
+	struct tm *tm;
+	if ((tm = localtime(&t)) == NULL) {
+		perror("localtime error");
+	//        exit(EXIT_FAILURE);
+	}
+
+	// RETURN THE TIME
 	return asctime(tm);
 
 }
@@ -115,42 +115,37 @@ char *get_time(){
 // SEND THE STUDENT NAME AND NUMBER
 void send_student_info(int socket){
 
+	// BUILD UP THE STRING TO SEND
 	char *ipaddress = get_ip_address();
 	char name[] = "Christopher Connor";
 	char sid[] = "S1234567";
 	
+	// ALLOCATE THE MEMORY AND COPY IN THE FORMATTED STRING
 	char *response = malloc(sizeof(char)*100);
 	snprintf(response,100,"%s,%s,%s",name,sid,(char *)ipaddress);
 
-	//printf("%s\n",response);
-
-
-	// FREE UP THE MEMORY IN IPADDRESS
-
-	//send_string(&socket,response);
-
-	//printf("SENDING ACROSS: %s //EOL\n",response);
+	// SEND THE DATA
 	send_string(socket,response);
-	//size_t payload_length = strlen(response)+1;
-	//writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
-	//writen(socket, (unsigned char *)response, payload_length);
 
+	// FREE UP THE ALLOCATED MEMORY
 	free(ipaddress);
 	free(response);
+
+	// EXTRA SECURITY
+	ipaddress=NULL;
+	response=NULL;
 }
 
-// SEND STRING BACK TO CLIENT
+// REUSABLE FUNCTION TO SEND A STRING BACK TO CLIENT
 void send_string(int socket, char *response){
 
 	size_t payload_length = strlen(response);
 
-	// TEMP DEBUG
-	//printf("PAYLOAD: %s //EOL%zu\n",response,payload_length);
+	//printf("PAYLOAD: %s //EOL%zu\n",response,payload_length);//DEBUG
 
 	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
 	
-	// TEMP DEBUG
-	//printf("DATA: %s //EOL%zu\n",response,payload_length);
+	//printf("DATA: %s //EOL%zu\n",response,payload_length);//dEBUG
 
 	writen(socket, (unsigned char *)response, payload_length);
 
@@ -158,197 +153,165 @@ void send_string(int socket, char *response){
 
 }
 
+// GET THE CLIENT IP ADDRESS
 char *get_ip_address(){
 
 	int fd;
 	struct ifreq ifr;
 
-    fd = socket(AF_INET, SOCK_DGRAM, 0);
+	fd = socket(AF_INET, SOCK_DGRAM, 0);
 
-    /* I want to get an IPv4 IP address */
-    ifr.ifr_addr.sa_family = AF_INET;
+	/* I want to get an IPv4 IP address */
+	ifr.ifr_addr.sa_family = AF_INET;
 
-    /* I want an IP address attached to "eth0" */
-    strncpy(ifr.ifr_name, "eth0", IFNAMSIZ-1);
+	/* I want an IP address attached to "eth0" */
+	strncpy(ifr.ifr_name, "eth0", IFNAMSIZ-1);
 
-    ioctl(fd, SIOCGIFADDR, &ifr);
+	ioctl(fd, SIOCGIFADDR, &ifr);
 
-    close(fd);
-    /* Display result */
+	close(fd);
+
+	// CREATE POINTER AND SEND BACK TO CALLING POINT	
 	int ipsize = 16;
 	char *ipaddress = (char *)malloc(sizeof(char)*ipsize);
-    snprintf(ipaddress,ipsize,"%s", inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
-    //printf("%s\n", inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
+	snprintf(ipaddress,ipsize,"%s", inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
 
 	return ipaddress;
 
 }
 
+// GET THE SERVER DETAILS AS A UTSNAME STRUCT
 struct utsname *get_server_details(){
 
-    struct utsname *uts = malloc(sizeof(struct utsname));
+	// CREATE SPACE FOR THE STRUCT
+	struct utsname *uts = malloc(sizeof(struct utsname));
 
-    if (uname(uts) == -1) {
-	printf("This did not work");
-	//perror("uname error");
-	//exit(EXIT_FAILURE);
-	return NULL;
-    }
+	// MAKE SURE CAN RETRIEVE THE DETAILS
+	if(uname(uts) == -1) {
 
-    /*printf("Node name:    %s\n", uts->nodename);
-    printf("System name:  %s\n", uts->sysname);
-    printf("Release:      %s\n", uts->release);
-    printf("Version:      %s\n", uts->version);
-    printf("Machine:      %s\n", uts->machine);*/
+		printf("This did not work");
+		//perror("uname error");
+		//exit(EXIT_FAILURE);
+		return NULL;
+	}
 
+	// RETURN THE STRUCT POINTER TO CALLING POINT
 	return uts;
 
 }
 
+// SEND THE SERVER FILE LIST BACK TO CLIENT
 void send_file_list(int socket){
 
+	// GET THE CURRENT FILE LIST
 	char *filelist = get_file_list();
 
+	// SEND STRING ACROSS TO CLIENT
 	send_string(socket,filelist);
-//	size_t payload_length = (sizeof(char)*strlen(filelist))+1;
 
-	// TEMP DEBUG
-	//printf("PAYLOAD: %s //EOL%zu\n",uts,payload_length);
-
-//	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
-	
-	// TEMP DEBUG
-	//printf("DATA: %s //EOL%zu\n",uts,payload_length);
-
-//	writen(socket, (unsigned char *)filelist, payload_length);
-	// FREE UTS ONCE SENT
+	// FREE UP THE FILELIST MEMORY
 	free(filelist);
+	
+	// EXTRA SECURITY
+	filelist=NULL;
+
 }
+
+// SEND THE UTSNAME STRUCT ACCROSS TO CLIENT
 void send_server_details(int socket){
 
+	// GET THE STRUCT
 	struct utsname *uts = get_server_details();
 	size_t payload_length = sizeof(struct utsname);
 
-	// TEMP DEBUG
-	//printf("PAYLOAD: %s //EOL%zu\n",uts,payload_length);
+	//printf("PAYLOAD: %s //EOL%zu\n",uts,payload_length);//DEBUG
 
 	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
 	
-	// TEMP DEBUG
-	//printf("DATA: %s //EOL%zu\n",uts,payload_length);
+	//printf("DATA: %s //EOL%zu\n",uts,payload_length);//DEBUG
 
 	writen(socket, (unsigned char *)uts, payload_length);
 	// FREE UTS ONCE SENT
 	free(uts);
+	
+	// EXTRA SECURITY
+	uts=NULL;
 }
 
+// RETRIEVE MENU CHOICE FROM CLIENT
 void get_menu_choice(int socket, char *choice){
 
-	size_t payload_length = sizeof(char);
-	//size_t n = 
-	readn(socket, (unsigned char *) &payload_length, sizeof(size_t));
-
-	//printf("payload_length is: %zu (%zu bytes)\n", payload_length, n);
-	//unsigned char result[payload_length];
-
-	//printf("Reaches here?");
-	// n = 
-	readn(socket, (unsigned char *) choice, payload_length);
-
 	
-	//printf("The receipt of data was:%c\n",*choice);
-
-	// DONT WRITE BACK HERE
-//    writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
- //   writen(socket, (unsigned char *) choice, payload_length);
-
-//free(result);
+	size_t payload_length = sizeof(char);
+	
+	// READ PAYLOAD AND DATA FROM CLIENT
+	readn(socket, (unsigned char *) &payload_length, sizeof(size_t));
+	readn(socket, (unsigned char *) choice, payload_length);
 
 }
 
-    //printf("%s", asctime(tm));
-//	return asctime(tm);
-
-
-// thread function - one instance of each for each connected client
-// this is where the do-while loop will go
+// THREAD FUNCTION TO ENCOMPASS ALL FUNCTIONALITY
 void *client_handler(void *socket_desc)
 {
-    //Get the socket descriptor
-    int connfd = *(int *) socket_desc;
+	//Get the socket descriptor
+	int connfd = *(int *) socket_desc;
 
-    send_hello(connfd);
+	// SEND WELCOME MESSAGE
+	send_hello(connfd);
 
+	// CREATE A SPACE FOR THE MENU CHOICE
+	char *menu_choice = (char *)malloc(sizeof(char));
 
-// TODO: GET MENU OPTION
-char *menu_choice = (char *)malloc(sizeof(char));
+	// LOOP UNTIL EXIT CHOICE IS RECEIVED
+	do {
+	
+		// GET MENU CHOICE AND SET THE CHOICE POINTER
+		get_menu_choice(connfd,menu_choice);
 
-do {
-	// GET MENU CHOICE AND SET THE CHOICE POINTER
-	get_menu_choice(connfd,menu_choice);
+		switch(*menu_choice) {
 
-	switch(*menu_choice) {
-
-	case '1':
-	//generate_log("Sending User Info");
-	printf("Sending Student Info\n");
-	send_student_info(connfd);
-	break;
-
-	case '2':
-	{
-	printf("Sending the time...\n");
-	char *time = get_time();
-	send_string(connfd,time);
-	//free(time);
-	break;
-	}
-	case '3':
-	printf("Sending server details\n");
-	send_server_details(connfd);
-	break;
-	case '4':
-	{
-	printf("Sending file list...\n");
-	send_file_list(connfd);
-	//free(filelist);
-	break;
-	}
-	default:
-	//printf("DEFAULT MENU\n");
-	//send_student_info(connfd);
-	send_string(connfd,"Goodbye...");
-	break;
-	//send_string(connfd,"NO OPTION THIS IS DEFAULT");
+		case '1':
+			printf("Sending Student Info\n");
+			send_student_info(connfd);
+		break;
+		case '2':
+		{
+			//TODO: MAKE SURE TIME IS FREED
+			printf("Sending the time...\n");
+			char *time = get_time();
+			send_string(connfd,time);
+			//free(time);
+		break;
+		}
+		case '3':
+			printf("Sending server details\n");
+			send_server_details(connfd);
+		break;
+		case '4':
+		{
+			printf("Sending file list...\n");
+			send_file_list(connfd);
+		break;
+		}
+		default:
+			send_string(connfd,"Goodbye...");
+		break;
 	}
 
-} while(*menu_choice!='6');
+	} while(*menu_choice!='6');
 
-//printf("# IMMEDIATELY AFTER WHILE #\n");
-//	send_student_info(connfd);
-free(menu_choice);
-//TODO: SEND STUDENT ID
+	// FREE UP THE MEMORY CHOICE CHAR
+	free(menu_choice);
 
-/*    employee *employee1;
-    employee1 = (employee *) malloc(sizeof(employee));
 
-    int i;
-    for (i = 0; i < 5; i++) {
-	printf("(Counter: %d)\n", i);
-	get_and_send_employee(connfd, employee1);
-	printf("\n");
-    }
+	shutdown(connfd, SHUT_RDWR);
+	close(connfd);
 
-    free(employee1);*/
+	printf("Thread %lu has exited.\n", (unsigned long) pthread_self());
 
-    shutdown(connfd, SHUT_RDWR);
-    close(connfd);
-
-    printf("Thread %lu exiting\n", (unsigned long) pthread_self());
-
-    // always clean up sockets gracefully
-    shutdown(connfd, SHUT_RDWR);
- i  close(connfd);
+	// always clean up sockets gracefully
+	shutdown(connfd, SHUT_RDWR);
+	close(connfd);
 
     return 0;
 }  // end client_handler()
@@ -387,13 +350,15 @@ void get_and_send_employee(int socket, employee * e)
     writen(socket, (unsigned char *) e, payload_length);
 }  // end get_and_send_employee()
 
+
+// GET SERVER FILE LIST
 char *get_file_list(){
 
-    struct dirent **namelist;
-    int n;
-
-
-
+	//CREATE STRUCT
+	struct dirent **namelist;
+	int n;
+	
+	//TODO: FIND WHERE THE LEAK IS HERE :-|
 	if ((n = scandir("./upload/", &namelist, NULL, alphasort)) != -1){
   //      	perror("scandir");
 //		return "";
@@ -403,23 +368,16 @@ char *get_file_list(){
 
 	// TRY SETTING SPACE FOR 2 CHARS
 	//char *filelist = (char *)malloc(sizeof(char)*2);
+
+	// CREATE A BUFFER TO READ THE FILES INTO
 	size_t memallocation = sizeof(char)*2048;
 	char *list = (char *)malloc(memallocation);
 	memset(list,'\0',memallocation);
 
-//	char **dir_array = (char **)malloc(sizeof(char **)+1);
-
-
-	//strcpy(filelist,"");
-//	int i;
-//	for(i = 0; i < n; i++){
-
+	// LOOP THROUGH THE LIST
         while (n--) {
-//	printf("%s\n",namelist[n]->d_name);
-//	*dir_array[i] = (char *)malloc(strlen(namelist[n]->d_name)+1);
-	//strcpy(*dir_array[i],namelist[n]->d_name);
 
-	// TRY AND COPY INTO STRING - THE BELOW WORKS
+		// TRY AND COPY INTO STRING - THE BELOW WORKS
 		strcat(list,namelist[n]->d_name);
 		strcat(list,"\n");
 		free(namelist[n]);
@@ -452,53 +410,4 @@ char *get_file_list(){
 
 
 
-}
-
-/*char *build_list(char *old, char *new){
-
-	size_t oldlen = strlen(old);
-	size_t newlen = strlen(new);
-	size_t newstringlen = oldlen+newlen+1;
-
-	//char *newstring = (char *)malloc(sizeof(char)*(newstringlen)+1);
-
-	char *temp = (char *)realloc(old,sizeof(char)*newstringlen);
-	strcat(old,new);
-	
-
-	return temp;
-//	strcpy(newstring,old);
-//	strcpy(newstring,new);
-//	snprintf(newstring,newstringlen,"%s\n%s",old,new);
-
-//	return newstring;
-}*/
-
-void stat_file(char *file)
-{
-
-    struct stat sb;
-
-    if (stat(file, &sb) == -1) {
-	perror("stat");
-	exit(EXIT_FAILURE);
-    }
-
-	if(S_ISREG(sb.st_mode)){
-    printf("I-node number:            %ld\n", (long) sb.st_ino);
-    printf("Mode:                     %lo (octal)\n",
-	   (unsigned long) sb.st_mode);
-
-    printf("Link count:               %ld\n", (long) sb.st_nlink);
-    printf("Ownership:                UID=%ld   GID=%ld\n",
-	   (long) sb.st_uid, (long) sb.st_gid);
-    printf("Preferred I/O block size: %ld bytes\n", (long) sb.st_blksize);
-    printf("File size:                %lld bytes\n",
-	   (long long) sb.st_size);
-    printf("Blocks allocated:         %lld\n", (long long) sb.st_blocks);
-    printf("Last status change:       %s", ctime(&sb.st_ctime));
-    printf("Last file access:         %s", ctime(&sb.st_atime));
-    printf("Last file modification:   %s", ctime(&sb.st_mtime));
-    printf("\n");
-}
 }
