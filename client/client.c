@@ -194,13 +194,13 @@ void displaymenu()
 	printf("   MAIN MENU\n");
 	printf("-------------------\n");
 	printf("[0]\tRe-display menu\n");
-	printf("-------------------\n");
 	printf("[1]\tGet Student Information \n");
 	printf("[2]\tGet server timestamp\n");
 	printf("[3]\tGet server information\n");
 	printf("[4]\tGet server file list\n");
-	printf("[5]\tRetrieve Filet\n");
+	printf("[5]\tGet a file frin the server\n");
 	printf("[6]\tExit\n");
+	printf("-------------------\n");
 
 }
 
@@ -355,13 +355,19 @@ void get_file(int socket){
 	free(result);
 	result = NULL;
 
+	// GET FILENAME FROM USER
 	char *filename = get_file_name();
 	
+		// MAKE SURE IT ISN'T NULL
 		if(filename!=NULL){
 
+			// SEND THAT ACCROSS TO THE SERVER
 			send_string(socket,filename);
+			
+			// HANDLE THE FILE FROM THE SERVER
+			//TODO: ACTUALLY GET THE FILE
 			char *server_response = read_string(socket);
-			printf("RESULT WAS: %s",server_response);
+			printf("You request:\n%s\n",server_response);
 			free(server_response);		
 
 		}
@@ -369,6 +375,15 @@ void get_file(int socket){
 	free(filename);
 
 	}
+
+}
+
+void close_connection(int socket){
+
+	send_string(socket,"6");
+	char *response = read_string(socket);
+	printf("Exiting now...\n");
+	free(response);
 
 }
 
@@ -455,9 +470,7 @@ char input;
 			get_file(sockfd);
 			break;
 		case '6':
-			display_heading("Server File List");
-			send_string(sockfd,"6");
-			//send_menu_choice(sockfd,'6',read_string);
+			close_connection(sockfd);
 			break;
 		default:
 			printf("Invalid choice - 0 displays options...!\n");
@@ -467,25 +480,6 @@ char input;
 
 	} while (input != '6');
 
-    // send and receive a changed struct to/from the server
-/*    employee *employee1;		
-    employee1 = (employee *) malloc(sizeof(employee));
-
-    // arbitrary values
-    employee1->age = 23;
-    employee1->id_number = 3;
-    employee1->salary = 13000.21;
-
-    int i;
-    for (i = 0; i < 5; i++) {
-         printf("(Counter: %d)\n", i);
-	 send_and_get_employee(sockfd, employee1);
-         printf("\n");
-    }
-
-    free(employee1);*/
-
-    // *** make sure sockets are cleaned up
 
 	// GRACEFULLY CLOSE SOCKETS AND EXIT
 	close(sockfd);
