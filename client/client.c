@@ -19,7 +19,7 @@
 // CREATING TO ALLOW CALLBACK
 typedef void (*read_cb)(int socket);
 void send_string(int socket,char* response);
-void read_string(int socket);
+char *read_string(int socket);
 void send_menu_choice(int socket, char choice, read_cb readfunction);
 
 void read_get_file(int socket){
@@ -46,7 +46,7 @@ void read_get_file(int socket){
 	// PRINT STRING TO CONSOLE
 	printf("%s\n",result);
 
-			send_menu_choice(socket, '7',read_string);
+//			send_menu_choice(socket, '7',read_string);
 	send_string(socket,"fixed.txt");
 	
 	
@@ -118,7 +118,7 @@ char *read_string(int socket){
 }
 
 // READ UTSNAME STRUCT FROM SERVER
-void read_server_details(int socket){
+struct utsname *read_server_details(int socket){
 
 	size_t payload_length = sizeof(struct utsname);
 
@@ -143,15 +143,19 @@ void read_server_details(int socket){
 //	printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);//DEBUG
 
 		//FREE UP THE STRUCT
-		free(uts);
-		uts = NULL;
+	//	free(uts);
+	//	uts = NULL;
+	return uts;
 
+	} else {
+
+		return NULL;
 	}
 
 }
 
 // SEND USERS MENU CHOICE ACROSS TO SERVER AND HANDLE THE RESPONSE
-void send_menu_choice(int socket, char choice, read_cb readfunction){
+/*void send_menu_choice(int socket, char choice, read_cb readfunction){
 
 	size_t payload_length = sizeof(char);
 
@@ -162,9 +166,10 @@ void send_menu_choice(int socket, char choice, read_cb readfunction){
 	writen(socket, (unsigned char *) &choice, payload_length);
 
 	// CALLBACK DEPENDING ON DATA
-	readfunction(socket);
+	char *response = readfunction(socket);
+	free(response);
 
-}
+}*/
 
 
 //TODO: REMOVE
@@ -207,7 +212,7 @@ printf("\n%s\n-------------------\n",message);
 }
 
 // GET FILE NAME
-void get_file_name(){
+char *get_file_name(){
 
 
 	// GET OPTION FROM USER
@@ -218,12 +223,153 @@ void get_file_name(){
 	int input_size = 255;
 	char filename[input_size];	
 
-	fgets(filename, input_size, stdin);	
-	filename[strcspn(filename, "\n")] = 0;
-	printf("There are %d\n",(int)strcspn(filename,"\n"));
+	do {
+
+		fgets(filename, input_size, stdin);	
+		filename[strcspn(filename, "\n")] = 0;
+
+		if(strlen(filename)<=0){
+
+			printf("You must type a filename\n");
+
+		}
+
+	} while(strlen(filename) <= 0);
+
+	//printf("The string is %zu chars long\n",strlen(filename));
 	//input = name[0];
+
+	char *result = (char *)malloc((sizeof(char)*strlen(filename)+1));
+	memset(result,'\0',strlen(filename)+1);
 	
-	printf("You entered %s\n",filename);
+	if(result!=NULL){
+	strcpy(result,filename);
+	return result;
+	} else {
+	return NULL;
+	}
+	
+//	printf("You entered %s\n",filename);
+}
+
+// GET STUDENT INFO FROM SERVER
+void get_student_info(int socket){
+
+	// SEND THE MENU CHOICE
+	send_string(socket,"1");
+
+	// READ BACK THE DATA
+	char *result = read_string(socket);
+
+	// MAKE SURE IT ISN'T NULL
+	if(result!=NULL){
+
+	// DISPLAY AND CLEAR THE MEMORY
+	printf("%s\n",result);
+	free(result);
+	result = NULL;
+
+	}
+
+}
+// GET TIME FROM SERVER
+void get_server_time(int socket){
+
+
+	// SEND THE MENU CHOICE
+	send_string(socket,"2");
+
+	// READ BACK THE DATA
+	char *result = read_string(socket);
+
+	// MAKE SURE IT ISN'T NULL
+	if(result!=NULL){
+
+	// DISPLAY AND CLEAR THE MEMORY
+	printf("%s\n",result);
+	free(result);
+	result = NULL;
+
+	}
+
+}
+// GET SERVER INFORMATION
+void get_server_info(int socket){
+
+	// SEND THE MENU CHOICE
+	send_string(socket,"3");
+
+	// READ BACK THE DATA
+	struct utsname *result = read_server_details(socket);
+
+	// MAKE SURE IT ISN'T NULL
+	if(result!=NULL){
+
+	// DISPLAY AND CLEAR THE MEMORY
+	printf("Node name:    %s\n", result->nodename);
+	printf("System name:  %s\n", result->sysname);
+	printf("Release:      %s\n", result->release);
+	printf("Version:      %s\n", result->version);
+	printf("Machine:      %s\n", result->machine);
+
+	free(result);
+	result = NULL;
+
+	}
+
+}
+// GET FILE LIST FROM SERVER
+void get_file_list(int socket){
+
+	// SEND THE MENU CHOICE
+	send_string(socket,"4");
+
+	// READ BACK THE DATA
+	char *result = read_string(socket);
+
+	// MAKE SURE IT ISN'T NULL
+	if(result!=NULL){
+
+	// DISPLAY AND CLEAR THE MEMORY
+	printf("%s\n",result);
+	free(result);
+	result = NULL;
+
+	}
+}
+
+void get_file(int socket){
+
+
+	// SEND THE MENU CHOICE
+	send_string(socket,"5");
+
+	// READ BACK THE DATA
+	char *result = read_string(socket);
+
+	// MAKE SURE IT ISN'T NULL
+	if(result!=NULL){
+
+	// DISPLAY AND CLEAR THE MEMORY
+	printf("%s\n",result);
+	free(result);
+	result = NULL;
+
+	char *filename = get_file_name();
+	
+		if(filename!=NULL){
+
+			send_string(socket,filename);
+			char *server_response = read_string(socket);
+			printf("RESULT WAS: %s",server_response);
+			free(server_response);		
+
+		}
+
+	free(filename);
+
+	}
+
 }
 
 // PROGRAM MAIN ENTRY POINT
@@ -282,29 +428,36 @@ char input;
 		    break;
 		case '1':
 			display_heading("Student Information");
-			send_menu_choice(sockfd, '1',read_string);
+			get_student_info(sockfd);
+			//send_menu_choice(sockfd, '1',read_string);
 			break;
 		case '2':
 			display_heading("Server Timestamp");
-			send_menu_choice(sockfd, '2',read_string);
+			get_server_time(sockfd);
+			//send_menu_choice(sockfd, '2',read_string);
 			break;
 		case '3':
 			display_heading("Server Information");
-			send_menu_choice(sockfd, '3',read_server_details);
+			get_server_info(sockfd);
+			//send_menu_choice(sockfd, '3',read_server_details);
 			break;
 		case '4':
 			display_heading("Server File List");
-			send_menu_choice(sockfd, '4',read_string);
+			get_file_list(sockfd);
+			//send_menu_choice(sockfd, '4',read_string);
 			break;
 		case '5':
-			send_menu_choice(sockfd,'5',read_get_file);
+			//send_menu_choice(sockfd,'5',read_get_file);
 			//get_file_name();
 			//printf("Retrieve file list\n");
 			//display_heading("Server File List");
 			//send_menu_choice(sockfd, '4',read_string);
+			get_file(sockfd);
 			break;
 		case '6':
-			send_menu_choice(sockfd,'6',read_string);
+			display_heading("Server File List");
+			send_string(sockfd,"6");
+			//send_menu_choice(sockfd,'6',read_string);
 			break;
 		default:
 			printf("Invalid choice - 0 displays options...!\n");

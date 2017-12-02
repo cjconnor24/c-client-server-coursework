@@ -363,7 +363,7 @@ void get_menu_choice(int socket, char *choice){
 }
 
 // READ STRING FROM SERVE
-void read_string(int socket){
+char *read_string(int socket){
 
         size_t payload_length = sizeof(size_t);
         readn(socket, (unsigned char *) &payload_length, sizeof(size_t));
@@ -384,11 +384,17 @@ void read_string(int socket){
         //printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);//DEBUG
 
         // PRINT STRING TO CONSOLE
-        printf("%s\n",result);
+        //printf("%s\n",result);
+
+        return result;
 
         // FREE UP THE RESULT
-        free(result);
-        result = NULL;
+        //free(result);
+        //result = NULL;
+
+        } else {
+
+                return NULL;
 
         }
 
@@ -438,8 +444,13 @@ void *client_handler(void *socket_desc)
 		break;
 		}
 		case '5':
+			
 			printf("Client want's file\n");
 			send_string(connfd,"Which file would you like?");
+			char *filename = read_string(connfd);
+			printf("The client requested: %s\n",filename);
+			send_string(connfd,filename);
+			free(filename);
 		break;
 		case '7':
 			printf("The client has sent the string\n");
