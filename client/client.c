@@ -44,13 +44,13 @@ void send_and_get_employee(int socket, employee *e)
     printf("Salary is %6.2f\n", e->salary);    
 } // end send_and_get_employee()
 
+// READ STRING FROM SERVER
 void read_string(int socket){
 
 	size_t payload_length = sizeof(size_t);
-	//size_t 
 	readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
 
-	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
+	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);//DEBUG
 
 	// CALCULATE AND ALLOCATE MEMORY FOR THE RESULT
 	size_t memallocation = (sizeof(char)*payload_length)+1;
@@ -61,13 +61,14 @@ void read_string(int socket){
 	// INITIALISE EVERY PART OF MEM - WITHOUT WAS CAUSING VALG ISSUES
 	memset(result,'\0',memallocation);
 	
-	//n =
 	readn(socket, (unsigned char *) result, payload_length);
 
-	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
+	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);//DEBUG
 
+	// PRINT STRING TO CONSOLE
 	printf("%s\n",result);
 
+	// FREE UP THE RESULT
 	free(result);
 	result = NULL;
 
@@ -75,14 +76,14 @@ void read_string(int socket){
 
 }
 
+// READ UTSNAME STRUCT FROM SERVER
 void read_server_details(int socket){
 
 	size_t payload_length = sizeof(struct utsname);
 
-	//size_t n =
 	readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
 
-	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
+	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);//DEBUG
 
 	struct utsname *uts = malloc(sizeof(struct utsname));
 //	payload_length = sizeof(struct utsname);
@@ -90,28 +91,26 @@ void read_server_details(int socket){
 	// MAKE SURE THE STRUCT ISN'T NULL BEFORE DOING SOMETHING WITH IT	
 	if(uts!=NULL){
 
-	//n = 
-	readn(socket, (unsigned char *) uts, payload_length);
+		readn(socket, (unsigned char *) uts, payload_length);
 
-
-	    printf("Node name:    %s\n", uts->nodename);
-	    printf("System name:  %s\n", uts->sysname);
-	    printf("Release:      %s\n", uts->release);
-	    printf("Version:      %s\n", uts->version);
-	    printf("Machine:      %s\n", uts->machine);
+		printf("Node name:    %s\n", uts->nodename);
+		printf("System name:  %s\n", uts->sysname);
+		printf("Release:      %s\n", uts->release);
+		printf("Version:      %s\n", uts->version);
+		printf("Machine:      %s\n", uts->machine);
 	
-//	printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
+//	printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);//DEBUG
 
-	//FREE UP THE STRUCT
-	free(uts);
-	uts = NULL;
+		//FREE UP THE STRUCT
+		free(uts);
+		uts = NULL;
 
 	}
 
 }
 
+// SEND USERS MENU CHOICE ACROSS TO SERVER AND HANDLE THE RESPONSE
 void send_menu_choice(int socket, char choice, read_cb readfunction){
-
 
 	size_t payload_length = sizeof(char);
 
@@ -124,29 +123,10 @@ void send_menu_choice(int socket, char choice, read_cb readfunction){
 	// CALLBACK DEPENDING ON DATA
 	readfunction(socket);
 
-/*	if(choice=='3'){
-	read_server_details(socket);
-	} else {
-
-	read_string(socket);*/
 }
 
-/*	payload_length = sizeof(size_t);
-	size_t n =readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
 
-	printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
-
-	char *e = malloc(sizeof(char)*payload_length);
-
-	n = readn(socket, (unsigned char *) e, payload_length);
-
-	printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);
-
-	printf("%s\n",e);
-
-free(e);*/
-
-
+//TODO: REMOVE
 // how to receive a string
 void get_hello(int socket)
 {
@@ -160,24 +140,31 @@ void get_hello(int socket)
     printf("Received: %zu bytes\n\n", k);
 } // end get_hello()
 
+// DISPLAY MENU OPTIONS TO USER
 void displaymenu()
 {
     
-	printf("[0]\tDisplay menu\n");
+	printf("-------------------\n");
+	printf("   MAIN MENU\n");
+	printf("-------------------\n");
+	printf("[0]\tRe-display menu\n");
 	printf("-------------------\n");
 	printf("[1]\tGet Student Information \n");
 	printf("[2]\tGet server timestamp\n");
 	printf("[3]\tGet server information\n");
 	printf("[4]\tGet server file list\n");
-	printf("-------------------\n");
 	printf("[6] Exit\n");
 
 }
+
+// SMALL HELPER FUNCTION TO FORMAT DATA CONSISTENTLY
 void display_heading(char *message){
 
 printf("\n%s\n-------------------\n",message);
 
 }
+
+// PROGRAM MAIN ENTRY POINT
 int main(void)
 {
     // *** this code down to the next "// ***" does not need to be changed except the port number
@@ -215,46 +202,48 @@ char input;
 
     displaymenu();
 
-    do {
-	printf("option> ");
-	fgets(name, INPUTSIZ, stdin);	
-	name[strcspn(name, "\n")] = 0;
-	input = name[0];
-	if (strlen(name) > 1)
-	    input = 'x';	
+	do {
 
-	switch (input) {
-	case '0':
-	    displaymenu();
-	    break;
-	case '1':
-	//printf("MENU ONE");
-	display_heading("Student Information");
-	send_menu_choice(sockfd, '1',read_string);
-	    break;
-	case '2':
-	display_heading("Server Timestamp");
-send_menu_choice(sockfd, '2',read_string);
-	    break;
-	case '3':
-	display_heading("Server Information");
-	send_menu_choice(sockfd, '3',read_server_details);
-	    break;
-	case '4':
-	display_heading("Server File List");
-	send_menu_choice(sockfd, '4',read_string);
-	//sleep(4);
-//	    printf("Goodbye!\n");
-	    break;
-	case '6':
-	send_menu_choice(sockfd,'6',read_string);
-	break;
-	default:
-	    printf("Invalid choice - 0 displays options...!\n");
-		displaymenu();
-	    break;
+		// GET OPTION FROM USER
+		printf("option> ");
+		fgets(name, INPUTSIZ, stdin);	
+		name[strcspn(name, "\n")] = 0;
+		input = name[0];
+
+		// ENSURE ONLY 1 CHARACTER LONG
+		if (strlen(name) > 1)
+		input = 'x';	
+
+		switch (input) {
+		case '0':
+		    displaymenu();
+		    break;
+		case '1':
+			display_heading("Student Information");
+			send_menu_choice(sockfd, '1',read_string);
+			break;
+		case '2':
+			display_heading("Server Timestamp");
+			send_menu_choice(sockfd, '2',read_string);
+			break;
+		case '3':
+			display_heading("Server Information");
+			send_menu_choice(sockfd, '3',read_server_details);
+			break;
+		case '4':
+			display_heading("Server File List");
+			send_menu_choice(sockfd, '4',read_string);
+			break;
+		case '6':
+			send_menu_choice(sockfd,'6',read_string);
+			break;
+		default:
+			printf("Invalid choice - 0 displays options...!\n");
+			displaymenu();
+		    break;
 	}
-    } while (input != '6');
+
+	} while (input != '6');
 
     // send and receive a changed struct to/from the server
 /*    employee *employee1;		
@@ -276,7 +265,8 @@ send_menu_choice(sockfd, '2',read_string);
 
     // *** make sure sockets are cleaned up
 
-    close(sockfd);
+	// GRACEFULLY CLOSE SOCKETS AND EXIT
+	close(sockfd);
+	exit(EXIT_SUCCESS);
 
-    exit(EXIT_SUCCESS);
 } // end main()
