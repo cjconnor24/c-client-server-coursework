@@ -16,33 +16,8 @@
 
 #define INPUTSIZ 10
 
-typedef struct {
-    int id_number;
-    int age;
-    float salary;
-} employee;
-
 // CREATING TO ALLOW CALLBACK
 typedef void (*read_cb)(int socket);
-
-// how to send and receive structs
-void send_and_get_employee(int socket, employee *e)  
-{
-    size_t payload_length = sizeof(employee);
-
-    // send the original struct
-    writen(socket, (unsigned char *) &payload_length, sizeof(size_t));	
-    writen(socket, (unsigned char *) e, payload_length);	 		
-
-    // get back the altered struct
-    readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
-    readn(socket, (unsigned char *) e, payload_length);
-
-    // print out details of received & altered struct
-    printf("Age is %d\n", e->age);
-    printf("id is %d\n", e->id_number);
-    printf("Salary is %6.2f\n", e->salary);    
-} // end send_and_get_employee()
 
 // READ STRING FROM SERVER
 void read_string(int socket){
@@ -153,7 +128,8 @@ void displaymenu()
 	printf("[2]\tGet server timestamp\n");
 	printf("[3]\tGet server information\n");
 	printf("[4]\tGet server file list\n");
-	printf("[6] Exit\n");
+	printf("[5]\tRetrieve Filet\n");
+	printf("[6]\tExit\n");
 
 }
 
@@ -162,6 +138,26 @@ void display_heading(char *message){
 
 printf("\n%s\n-------------------\n",message);
 
+}
+
+// GET FILE NAME
+void get_file_name(){
+
+
+	// GET OPTION FROM USER
+	printf("Please enter the name of the file\n");
+	printf("that you would like to download\n\n");
+	printf("Filename> ");
+
+	int input_size = 255;
+	char filename[input_size];	
+
+	fgets(filename, input_size, stdin);	
+	filename[strcspn(filename, "\n")] = 0;
+	printf("There are %d\n",(int)strcspn(filename,"\n"));
+	//input = name[0];
+	
+	printf("You entered %s\n",filename);
 }
 
 // PROGRAM MAIN ENTRY POINT
@@ -233,6 +229,12 @@ char input;
 		case '4':
 			display_heading("Server File List");
 			send_menu_choice(sockfd, '4',read_string);
+			break;
+		case '5':
+			get_file_name();
+			//printf("Retrieve file list\n");
+			//display_heading("Server File List");
+			//send_menu_choice(sockfd, '4',read_string);
 			break;
 		case '6':
 			send_menu_choice(sockfd,'6',read_string);

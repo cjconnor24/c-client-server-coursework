@@ -27,13 +27,6 @@
 // thread function
 void *client_handler(void *);
 
-typedef struct {
-    int id_number;
-    int age;
-    float salary;
-} employee;
-
-// PROTOTYPES
 void get_and_send_employee(int, employee *);
 void send_hello(int);
 char *get_ip_address();
@@ -378,30 +371,6 @@ void send_hello(int socket)
     writen(socket, (unsigned char *) &n, sizeof(size_t));	
     writen(socket, (unsigned char *) hello_string, n);	  
 } // end send_hello()
-
-// as before...
-void get_and_send_employee(int socket, employee * e)
-{
-
-	sleep(1);
-    size_t payload_length;
-
-    size_t n = readn(socket, (unsigned char *) &payload_length, sizeof(size_t));
-    printf("payload_length is: %zu (%zu bytes)\n", payload_length, n);
-    n = readn(socket, (unsigned char *) e, payload_length);
-
-    printf("Age is %d\n", e->age);
-    printf("id is %d\n", e->id_number);
-    printf("Salary is %6.2f\n", e->salary);
-    printf("(%zu bytes)\n", n);
-
-    // make arbitrary changes to the struct & then send it back
-    e->age++;
-    e->salary += 1.0;
-
-    writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
-    writen(socket, (unsigned char *) e, payload_length);
-}  // end get_and_send_employee()
 
 
 // GET SERVER FILE LIST
