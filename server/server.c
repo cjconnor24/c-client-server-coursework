@@ -22,6 +22,7 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <signal.h>
+#include <sys/time.h>
 
 // thread function
 void *client_handler(void *);
@@ -44,9 +45,9 @@ char *build_list(char *old, char *new);
 // SIGNAL HANDLER
 static void handler(int sig, siginfo_t *siginfo, void *context)
 {
-	//printf("The signal no was %d\n",sig);
-	//printf("PID: %ld, UID: %ld\n",
-	//(long) siginfo->si_pid, (long) siginfo->si_uid);
+	printf("The signal no was %d\n",sig);
+	printf("PID: %ld, UID: %ld\n",
+	(long) siginfo->si_pid, (long) siginfo->si_uid);
 }
 
 // SET TIMER TO CURRENT TIME VALUE
@@ -86,20 +87,6 @@ int main(void)
 	exit(EXIT_FAILURE);
     }
     // end socket setup
-	//TODO: SIGNAL HANDLER
-/*	struct sigaction act;
-	memset(&act, '\0', sizeof(act));
-
-	// this is a pointer to a function
-	act.sa_sigaction = &handler;
-	// the SA_SIGINFO flag tells sigaction() to use the sa_sigaction field, not sa_handler
-	act.sa_flags = SA_SIGINFO;
-
-	// HANDLE SIGINT
-	if (sigaction(SIGINT, &act, NULL) == -1) {
-		perror("sigaction");
-		exit(EXIT_FAILURE);
-	}*/
 
 	//TODO: TIME TO SEE HOW LONG SERVER HAS BEEN RUNNING
 
@@ -121,8 +108,26 @@ int main(void)
 	}
 
 	//Now join the thread , so that we dont terminate before the thread
-	pthread_join( sniffer_thread , NULL);
+	//TODO: SIGNAL HANDLER
+/*	struct sigaction act;
+	memset(&act, '\0', sizeof(act));
+
+	// this is a pointer to a function
+	act.sa_sigaction = &handler;
+	// the SA_SIGINFO flag tells sigaction() to use the sa_sigaction field, not sa_handler
+	act.sa_flags = SA_SIGINFO;
+
+	// HANDLE SIGINT
+	if (sigaction(SIGINT, &act, NULL) == -1) {
+		perror("sigaction");
+		exit(EXIT_FAILURE);
+	}*/
+	printf("--------------------\n");
 	printf("Handler assigned\n");
+	printf("--------------------\n");
+
+
+	//pthread_join( sniffer_thread , NULL);
 	
 	// THIS NEED TO BE INSIDE A HANDLER FOR SIGNAL
 	set_timer(&end_time);
@@ -358,6 +363,8 @@ void *client_handler(void *socket_desc)
 	// always clean up sockets gracefully
 	shutdown(connfd, SHUT_RDWR);
 	close(connfd);
+
+	pthread_exit(NULL);
 
     return 0;
 }  // end client_handler()
