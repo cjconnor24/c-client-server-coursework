@@ -80,7 +80,7 @@ void send_string(int socket, char *response){
 }
 
 // READ STRING FROM SERVE
-void read_string(int socket){
+char *read_string(int socket){
 
 	size_t payload_length = sizeof(size_t);
 	readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
@@ -101,11 +101,17 @@ void read_string(int socket){
 	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);//DEBUG
 
 	// PRINT STRING TO CONSOLE
-	printf("%s\n",result);
+	//printf("%s\n",result);
+
+	return result;
 
 	// FREE UP THE RESULT
-	free(result);
-	result = NULL;
+	//free(result);
+	//result = NULL;
+
+	} else {
+
+		return NULL;	
 
 	}
 
