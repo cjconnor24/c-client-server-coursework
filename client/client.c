@@ -13,7 +13,7 @@
 #include <arpa/inet.h>
 #include "rdwrn.h"
 #include <sys/utsname.h>
-
+#include <signal.h>
 #define INPUTSIZ 10
 
 // CREATING TO ALLOW CALLBACK
@@ -21,6 +21,14 @@ typedef void (*read_cb)(int socket);
 void send_string(int socket,char* response);
 char *read_string(int socket);
 void send_menu_choice(int socket, char choice, read_cb readfunction);
+
+// SIGNAL HANDLER
+static void handler(int sig, siginfo_t *siginfo, void *context)
+{
+        printf("The signal no was %d\n",sig);
+        printf("PID: %ld, UID: %ld\n",
+        (long) siginfo->si_pid, (long) siginfo->si_uid);
+}
 
 void read_get_file(int socket){
 
