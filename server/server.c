@@ -34,6 +34,10 @@ void stat_file(char *file);
 char *get_file_list();
 char *build_list(char *old, char *new);
 
+// GLOBAL VARS FOR SIGNAL HANDLER
+//TODO: Connection and socket
+//TODO: Timer vars so can tidy up on exit
+
 // SIGNAL HANDLER
 static void handler(int sig, siginfo_t *siginfo, void *context)
 {
@@ -83,6 +87,22 @@ int main(void)
     puts("Waiting for incoming connections...");
     while (1) {
 
+
+	//TODO: SIGNAL HANDLER
+	struct sigaction act;
+	memset(&act, '\0', sizeof(act));
+
+	// this is a pointer to a function
+	act.sa_sigaction = &handler;
+	// the SA_SIGINFO flag tells sigaction() to use the sa_sigaction field, not sa_handler
+	act.sa_flags = SA_SIGINFO;
+
+	// HANDLE SIGINT
+	if (sigaction(SIGINT, &act, NULL) == -1) {
+		perror("sigaction");
+		exit(EXIT_FAILURE);
+	}
+
 	printf("Waiting for a client to connect...\n");
 	connfd = accept(listenfd, (struct sockaddr *) &client_addr, &socksize);
 
@@ -97,20 +117,6 @@ int main(void)
 	}
 
 	//Now join the thread , so that we dont terminate before the thread
-	//TODO: SIGNAL HANDLER
-/*	struct sigaction act;
-	memset(&act, '\0', sizeof(act));
-
-	// this is a pointer to a function
-	act.sa_sigaction = &handler;
-	// the SA_SIGINFO flag tells sigaction() to use the sa_sigaction field, not sa_handler
-	act.sa_flags = SA_SIGINFO;
-
-	// HANDLE SIGINT
-	if (sigaction(SIGINT, &act, NULL) == -1) {
-		perror("sigaction");
-		exit(EXIT_FAILURE);
-	}*/
 	printf("--------------------\n");
 	printf("Handler assigned\n");
 	printf("--------------------\n");
