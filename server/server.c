@@ -1,5 +1,3 @@
-// Cwk2: server.c - multi-threaded server using readn() and writen()
-
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -33,8 +31,14 @@ void send_string(int socket, char *response);
 void stat_file(char *file);
 char *get_file_list();
 char *build_list(char *old, char *new);
-
+void set_timer(struct timeval *timer);
+//void uptime(struct timeval *start_time, struct timeval *end_time);
 // GLOBAL VARS FOR SIGNAL HANDLER
+// I KNOW ITS BAD PRACTISE BUT ONLY WAY
+// I COULD ACCESS POINTERS IN THE SIG HANDLER
+int connfd;
+struct timeval start_time, end_time;
+	int listenfd;
 //TODO: Connection and socket
 //TODO: Timer vars so can tidy up on exit
 
@@ -44,6 +48,26 @@ static void handler(int sig, siginfo_t *siginfo, void *context)
 	printf("The signal no was %d\n",sig);
 	printf("PID: %ld, UID: %ld\n",
 	(long) siginfo->si_pid, (long) siginfo->si_uid);
+
+	set_timer(&end_time);
+	//uptime(start_timer,end_time);
+	printf("Server will shut down...\n");
+
+	printf("Total execution time = %f seconds\n",(double)(end_time.tv_usec - start_time.tv_usec) / 1000000 + (double)(end_time.tv_sec - start_time.tv_sec));
+
+	// TRY AND CLOSE ANY CLIENT CONNECTIONS GRACEFULLY
+	if(close(connfd)==-1){
+	// IF THIS TRIGGERS -1 - THERE WAS NO ACTIVE CONNECTION FROM CLIENT
+	//	perror("No active connections to close. ");
+	}
+
+	// TRY AND CLOSE THE LISTENER GRACEFULLY 
+	if(close(listenfd)==-1){
+	// IF THIS TRIGGERS -1 THE LISTENER WASN'T ACTIVE
+	//	perror("No listener was active");
+	}
+
+	exit(EXIT_SUCCESS);
 }
 
 // SET TIMER TO CURRENT TIME VALUE
@@ -56,15 +80,24 @@ void set_timer(struct timeval *timer){
 
 }
 
+// DISPLAY UPTIME OF SERVER
+//void uptime(struct timeval *start_time, struct timeval *end_time){
+
+//	printf("Total execution time = %f seconds\n",(double)(end_time->tv_usec - start_time->tv_usec) / 1000000 + (double)(end_time->tv_sec - start_time->tv_sec));
+//}
+
 // you shouldn't need to change ain() in the server except the port number
 int main(void)
 {
 
 	// CREATE TIMERS FOR CALCULATING EXECUTION TIME
-	struct timeval start_time, end_time;
+	//struct timeval start_time, end_time;
 	set_timer(&start_time);
 
-    int listenfd = 0, connfd = 0;
+	listenfd = 0;
+	
+	// ALREADY DEFINED AS A GLOBAL
+	connfd = 0;
 
     struct sockaddr_in serv_addr;
     struct sockaddr_in client_addr;
@@ -97,6 +130,9 @@ int main(void)
 	// the SA_SIGINFO flag tells sigaction() to use the sa_sigaction field, not sa_handler
 	act.sa_flags = SA_SIGINFO;
 
+	// DEBUG
+	printf("Sig Handler Assigned\n");
+
 	// HANDLE SIGINT
 	if (sigaction(SIGINT, &act, NULL) == -1) {
 		perror("sigaction");
@@ -125,7 +161,6 @@ int main(void)
 	
 	// THIS NEED TO BE INSIDE A HANDLER FOR SIGNAL
 	set_timer(&end_time);
-	printf("Total execution time = %f seconds\n",(double)(end_time.tv_usec - start_time.tv_usec) / 1000000 + (double)(end_time.tv_sec - start_time.tv_sec));
 
 
 	pthread_join( sniffer_thread , NULL);
