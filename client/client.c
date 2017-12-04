@@ -28,6 +28,13 @@ static void handler(int sig, siginfo_t *siginfo, void *context)
         printf("The signal no was %d\n",sig);
         printf("PID: %ld, UID: %ld\n",
         (long) siginfo->si_pid, (long) siginfo->si_uid);
+
+	// MEANS CONNECTION HAS FAILED
+	if(siginfo->si_signo==13){
+		printf("Connection to the server has been lost...\n\nExiting now\n");
+		exit(EXIT_FAILURE);
+	}
+
 }
 
 void read_get_file(int socket){
