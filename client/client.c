@@ -398,6 +398,25 @@ void close_connection(int socket){
 // PROGRAM MAIN ENTRY POINT
 int main(void)
 {
+
+        //TODO: SIGNAL HANDLER
+        struct sigaction act;
+        memset(&act, '\0', sizeof(act));
+
+        // this is a pointer to a function
+        act.sa_sigaction = &handler;
+        // the SA_SIGINFO flag tells sigaction() to use the sa_sigaction field, not sa_handler
+        act.sa_flags = SA_SIGINFO;
+
+        // DEBUG
+        printf("Sig Handler Assigned\n");
+
+        // HANDLE SIGINT
+        if (sigaction(SIGPIPE, &act, NULL) == -1) {
+                perror("sigaction");
+                exit(EXIT_FAILURE);
+        }
+
     // *** this code down to the next "// ***" does not need to be changed except the port number
     int sockfd = 0;
     struct sockaddr_in serv_addr;
@@ -489,8 +508,14 @@ char input;
 	} while (input != '6');
 
 
-	// GRACEFULLY CLOSE SOCKETS AND EXIT
-	close(sockfd);
+	//TRY AND GRACEFULLY CLOSE SOCKETS AND EXIT
+	if(close(sockfd)==-1){
+
+		perror("Didn't close sockfd successfully");
+		exit(EXIT_FAILURE);
+
+	}
+
 	exit(EXIT_SUCCESS);
 
 } // end main()
