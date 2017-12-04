@@ -54,20 +54,35 @@ static void handler(int sig, siginfo_t *siginfo, void *context)
 	printf("Server will shut down...\n");
 
 	printf("Total execution time = %f seconds\n",(double)(end_time.tv_usec - start_time.tv_usec) / 1000000 + (double)(end_time.tv_sec - start_time.tv_sec));
+	
+	// HANDLE SIGINT - 2
+	if(siginfo->si_signo==2){
+	
+		// TRY AND CLOSE ANY CLIENT CONNECTIONS GRACEFULLY
+		if(close(connfd)==-1){
+		// IF THIS TRIGGERS -1 - THERE WAS NO ACTIVE CONNECTION FROM CLIENT
+		//	perror("No active connections to close. ");
+		}
+	
+		// TRY AND CLOSE THE LISTENER GRACEFULLY 
+		if(close(listenfd)==-1){
+		// IF THIS TRIGGERS -1 THE LISTENER WASN'T ACTIVE
+		//	perror("No listener was active");
+		}
 
-	// TRY AND CLOSE ANY CLIENT CONNECTIONS GRACEFULLY
-	if(close(connfd)==-1){
-	// IF THIS TRIGGERS -1 - THERE WAS NO ACTIVE CONNECTION FROM CLIENT
-	//	perror("No active connections to close. ");
+
+		printf("Server will shutdown in...\n");
+
+		int i;
+		for(i = 3; i > 0; i--){
+			printf("%d...\n",i);
+			sleep(1);
+		}
+
+		exit(EXIT_SUCCESS);
+
 	}
 
-	// TRY AND CLOSE THE LISTENER GRACEFULLY 
-	if(close(listenfd)==-1){
-	// IF THIS TRIGGERS -1 THE LISTENER WASN'T ACTIVE
-	//	perror("No listener was active");
-	}
-
-	exit(EXIT_SUCCESS);
 }
 
 // SET TIMER TO CURRENT TIME VALUE
