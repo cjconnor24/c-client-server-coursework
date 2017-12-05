@@ -51,10 +51,28 @@ static void handler(int sig, siginfo_t *siginfo, void *context)
 
 	set_timer(&end_time);
 	//uptime(start_timer,end_time);
-	printf("Server will shut down...\n");
+	printf("Server will shut down...Error %d\n",siginfo->si_signo);
 
 	printf("Total execution time = %f seconds\n",(double)(end_time.tv_usec - start_time.tv_usec) / 1000000 + (double)(end_time.tv_sec - start_time.tv_sec));
+
+	// HANDLE SIGPIPE	
+	if(siginfo->si_signo==13){
+		printf("13 triggered\n");
+	/*
+		if(close(connfd)==-1){
+		// IF THIS TRIGGERS -1 - THERE WAS NO ACTIVE CONNECTION FROM CLIENT
+		//	perror("No active connections to close. ");
+		}
 	
+		// TRY AND CLOSE THE LISTENER GRACEFULLY 
+		if(close(listenfd)==-1){
+		// IF THIS TRIGGERS -1 THE LISTENER WASN'T ACTIVE
+		//	perror("No listener was active");
+		}
+	*/
+
+	}
+
 	// HANDLE SIGINT - 2
 	if(siginfo->si_signo==2){
 	
@@ -131,6 +149,16 @@ int main(void)
 	exit(EXIT_FAILURE);
     }
 
+	// SETUP THREAD MASK TO STOP ENTIRE PROCESS DYING ON SIGPIPE IN THREAD
+	sigset_t set;
+	sigemptyset(&set);
+	sigaddset(&set, SIGPIPE);
+	//sigaddset(&set, SIGINT);
+	pthread_sigmask(SIG_BLOCK, &set, NULL);
+/*	sigset_t set;
+	sigaddset(&set,SIGPIPE);
+	pthread_sigmask(SIG_BLOCK,&set,NULL);*/
+
     //Accept and incoming connection
     puts("Waiting for incoming connections...");
     while (1) {
@@ -148,17 +176,31 @@ int main(void)
 	// DEBUG
 	printf("Sig Handler Assigned\n");
 
-	// HANDLE SIGINT
-	if (sigaction(SIGINT, &act, NULL) == -1) {
+        // HANDLE SIGPIPE
+	/*if (sigaction(SIGPIPE, &act, NULL) == -1) {
 		perror("sigaction");
 		exit(EXIT_FAILURE);
-	}
+	}*/
+
+        // HAND SIGINT
+        if (sigaction(SIGINT, &act, NULL) == -1) {
+                perror("sigaction");
+                exit(EXIT_FAILURE);
+        }
+	
+        if (sigaction(SIGPIPE, &act, NULL) == -1) {
+                perror("sigaction");
+                exit(EXIT_FAILURE);
+        }
+
+	
 
 	printf("Waiting for a client to connect...\n");
 	connfd = accept(listenfd, (struct sockaddr *) &client_addr, &socksize);
 
 
 	printf("Connection accepted...\n");
+
 
 	pthread_t sniffer_thread;
         // third parameter is a pointer to the thread function, fourth is its actual parameter
@@ -178,7 +220,7 @@ int main(void)
 	set_timer(&end_time);
 
 
-	pthread_join( sniffer_thread , NULL);
+	//pthread_join( sniffer_thread , NULL);
     }
 
     // never reached...
@@ -512,6 +554,8 @@ void *client_handler(void *socket_desc)
 
 	// LOOP UNTIL EXIT CHOICE IS RECEIVED
 	do {
+
+		printf("CONNFD IS: %d\n",connfd);
 	
 		// GET MENU CHOICE AND SET THE CHOICE POINTER
 		get_menu_choice(connfd,menu_choice);
