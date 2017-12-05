@@ -22,6 +22,7 @@ void send_string(int socket,char* response);
 char *read_string(int socket);
 void send_menu_choice(int socket, char choice, read_cb readfunction);
 
+void close_connection(int);
 // DECLARING GLOBAL TO CLOSE CONNECTION GRACEFULLY
 int sockfd;
 
@@ -53,14 +54,27 @@ static void handler(int sig, siginfo_t *siginfo, void *context)
 
 		printf("You are going to force quite the connection\n");
 	
-		// SOCKET COULDN'T BE CLOSED GRACEFULLY	
+			close_connection(sockfd);
+
+
+	//TRY AND GRACEFULLY CLOSE SOCKETS AND EXIT
+	if(close(sockfd)==-1){
+
+		perror("Didn't close sockfd successfully");
+		exit(EXIT_FAILURE);
+
+	}
+
+	exit(EXIT_SUCCESS);
+
+/*		// SOCKET COULDN'T BE CLOSED GRACEFULLY	
 		if(close(sockfd)==-1){
 			perror("The socket couldn't be closed");
 			exit(EXIT_FAILURE);
 		} else {
 		// SOCKET WAS CLOSED SUCCESSFULLY
 		exit(EXIT_SUCCESS);
-		}
+		}*/
 
 	}
 
@@ -242,7 +256,7 @@ void displaymenu()
 	printf("[2]\tGet server timestamp\n");
 	printf("[3]\tGet server information\n");
 	printf("[4]\tGet server file list\n");
-	printf("[5]\tGet a file frin the server\n");
+	printf("[5]\tGet a file from the server\n");
 	printf("[6]\tExit\n");
 	printf("-------------------\n");
 
