@@ -52,29 +52,21 @@ static void handler(int sig, siginfo_t *siginfo, void *context)
 	// HANDLE SIGINT - CLOSE SOCKET GRACEFULLY
 	if(siginfo->si_signo==2){
 
-		printf("You are going to force quite the connection\n");
-	
-			close_connection(sockfd);
+		printf("You have force quit the connection to the server.\n");
+			
+		// LET THE SERVER KNOW AND CLOSE	
+		close_connection(sockfd);
 
 
-	//TRY AND GRACEFULLY CLOSE SOCKETS AND EXIT
-	if(close(sockfd)==-1){
-
-		perror("Didn't close sockfd successfully");
-		exit(EXIT_FAILURE);
-
-	}
-
-	exit(EXIT_SUCCESS);
-
-/*		// SOCKET COULDN'T BE CLOSED GRACEFULLY	
+		//TRY AND GRACEFULLY CLOSE SOCKETS AND EXIT
 		if(close(sockfd)==-1){
-			perror("The socket couldn't be closed");
+	
+			perror("Didn't close sockfd successfully");
 			exit(EXIT_FAILURE);
-		} else {
-		// SOCKET WAS CLOSED SUCCESSFULLY
+
+		}
+
 		exit(EXIT_SUCCESS);
-		}*/
 
 	}
 
