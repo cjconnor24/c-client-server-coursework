@@ -28,20 +28,40 @@ int sockfd;
 // SIGNAL HANDLER
 static void handler(int sig, siginfo_t *siginfo, void *context)
 {
+
+	// DEBUG
         printf("The signal no was %d\n",sig);
         printf("PID: %ld, UID: %ld\n",
         (long) siginfo->si_pid, (long) siginfo->si_uid);
 
 	// MEANS CONNECTION HAS FAILED
 	if(siginfo->si_signo==13){
+	
 		printf("Connection to the server has been lost...\n\nExiting now\n");
-	close(sockfd);
+	
+		// CHECK TO SEE IF SOCKET CLOSES
+		if(close(sockfd)==-1){
+			perror("The socket couldn't be closed");
+		}
+	
 		exit(EXIT_FAILURE);
-	}
 
+	}
+	
+	// HANDLE SIGINT - CLOSE SOCKET GRACEFULLY
 	if(siginfo->si_signo==2){
-	printf("You are going to force quite the connection");
-	close(sockfd);
+
+		printf("You are going to force quite the connection\n");
+	
+		// SOCKET COULDN'T BE CLOSED GRACEFULLY	
+		if(close(sockfd)==-1){
+			perror("The socket couldn't be closed");
+			exit(EXIT_FAILURE);
+		} else {
+		// SOCKET WAS CLOSED SUCCESSFULLY
+		exit(EXIT_SUCCESS);
+		}
+
 	}
 
 }
@@ -427,8 +447,14 @@ int main(void)
         // DEBUG
         printf("Sig Handler Assigned\n");
 
-        // HANDLE SIGINT
+        // HANDLE SIGPIPE
         if (sigaction(SIGPIPE, &act, NULL) == -1) {
+                perror("sigaction");
+                exit(EXIT_FAILURE);
+        }
+
+	// HAND SIGINT
+        if (sigaction(SIGINT, &act, NULL) == -1) {
                 perror("sigaction");
                 exit(EXIT_FAILURE);
         }
