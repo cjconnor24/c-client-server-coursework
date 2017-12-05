@@ -33,14 +33,15 @@ char *get_file_list();
 char *build_list(char *old, char *new);
 void set_timer(struct timeval *timer);
 //void uptime(struct timeval *start_time, struct timeval *end_time);
+
+
 // GLOBAL VARS FOR SIGNAL HANDLER
 // I KNOW ITS BAD PRACTISE BUT ONLY WAY
 // I COULD ACCESS POINTERS IN THE SIG HANDLER
-int connfd;
-struct timeval start_time, end_time;
-	int listenfd;
-//TODO: Connection and socket
-//TODO: Timer vars so can tidy up on exit
+struct timeval start_time, end_time; // START AND END TIME FOR EXECUTION TIME
+int connfd;			// CONNECTION TO CLOSE IN SIGHANDLER
+int listenfd;			// LISTENER TO CLOSE IN SIGHANDLER
+pthread_t sniffer_thread;	// SNIFFER THREAD WHICH WILL WAIT FOR PTHREAD_JOIN IN SIGHANDLER
 
 // SIGNAL HANDLER
 static void handler(int sig, siginfo_t *siginfo, void *context)
@@ -49,6 +50,8 @@ static void handler(int sig, siginfo_t *siginfo, void *context)
 	printf("PID: %ld, UID: %ld\n",
 	(long) siginfo->si_pid, (long) siginfo->si_uid);
 
+	// WAIT ON ALL THREADS ENDING BEFORE CLOSE
+	pthread_join(sniffer_thread,NULL);
 	set_timer(&end_time);
 	//uptime(start_timer,end_time);
 	printf("Server will shut down...Error %d\n",siginfo->si_signo);
@@ -79,13 +82,13 @@ static void handler(int sig, siginfo_t *siginfo, void *context)
 		// TRY AND CLOSE ANY CLIENT CONNECTIONS GRACEFULLY
 		if(close(connfd)==-1){
 		// IF THIS TRIGGERS -1 - THERE WAS NO ACTIVE CONNECTION FROM CLIENT
-		//	perror("No active connections to close. ");
+			perror("No active connections to close. ");
 		}
 	
 		// TRY AND CLOSE THE LISTENER GRACEFULLY 
 		if(close(listenfd)==-1){
 		// IF THIS TRIGGERS -1 THE LISTENER WASN'T ACTIVE
-		//	perror("No listener was active");
+			perror("No listener was active");
 		}
 
 
@@ -127,43 +130,7 @@ int main(void)
 	//struct timeval start_time, end_time;
 	set_timer(&start_time);
 
-	listenfd = 0;
-	
-	// ALREADY DEFINED AS A GLOBAL
-	connfd = 0;
-
-    struct sockaddr_in serv_addr;
-    struct sockaddr_in client_addr;
-    socklen_t socksize = sizeof(struct sockaddr_in);
-    listenfd = socket(AF_INET, SOCK_STREAM, 0);
-    memset(&serv_addr, '0', sizeof(serv_addr));
-
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serv_addr.sin_port = htons(50031);
-
-    bind(listenfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
-
-    if (listen(listenfd, 10) == -1) {
-	perror("Failed to listen");
-	exit(EXIT_FAILURE);
-    }
-
-	// SETUP THREAD MASK TO STOP ENTIRE PROCESS DYING ON SIGPIPE IN THREAD
-	sigset_t set;
-	sigemptyset(&set);
-	sigaddset(&set, SIGPIPE);
-	//sigaddset(&set, SIGINT);
-	pthread_sigmask(SIG_BLOCK, &set, NULL);
-/*	sigset_t set;
-	sigaddset(&set,SIGPIPE);
-	pthread_sigmask(SIG_BLOCK,&set,NULL);*/
-
-    //Accept and incoming connection
-    puts("Waiting for incoming connections...");
-    while (1) {
-
-
+	// SIGNAL HANDLER -----------------------
 	//TODO: SIGNAL HANDLER
 	struct sigaction act;
 	memset(&act, '\0', sizeof(act));
@@ -193,6 +160,47 @@ int main(void)
                 exit(EXIT_FAILURE);
         }
 
+	// END
+	// SIGNAL HANDLER -----------------------
+
+	listenfd = 0;
+	
+	// ALREADY DEFINED AS A GLOBAL
+	connfd = 0;
+
+struct sockaddr_in serv_addr;
+struct sockaddr_in client_addr;
+socklen_t socksize = sizeof(struct sockaddr_in);
+listenfd = socket(AF_INET, SOCK_STREAM, 0);
+memset(&serv_addr, '0', sizeof(serv_addr));
+
+serv_addr.sin_family = AF_INET;
+serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+serv_addr.sin_port = htons(50031);
+
+bind(listenfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+
+if (listen(listenfd, 10) == -1) {
+perror("Failed to listen");
+exit(EXIT_FAILURE);
+}
+
+	// SETUP THREAD MASK TO STOP ENTIRE PROCESS DYING ON SIGPIPE IN THREAD
+/*	sigset_t set;
+	sigemptyset(&set);
+	sigaddset(&set, SIGPIPE);
+	//sigaddset(&set, SIGINT);
+	pthread_sigmask(SIG_BLOCK, &set, NULL);
+	sigset_t set;
+	sigaddset(&set,SIGPIPE);
+	pthread_sigmask(SIG_BLOCK,&set,NULL);*/
+
+    //Accept and incoming connection
+puts("Waiting for incoming connections...");
+while (1) {
+
+
+
 	
 
 	printf("Waiting for a client to connect...\n");
@@ -202,7 +210,6 @@ int main(void)
 	printf("Connection accepted...\n");
 
 
-	pthread_t sniffer_thread;
         // third parameter is a pointer to the thread function, fourth is its actual parameter
 	if (pthread_create(&sniffer_thread, NULL, client_handler,(void *) &connfd) < 0) {
 	    perror("could not create thread");
@@ -217,10 +224,10 @@ int main(void)
 
 	
 	// THIS NEED TO BE INSIDE A HANDLER FOR SIGNAL
-	set_timer(&end_time);
-
+	//set_timer(&end_time);
 
 	//pthread_join( sniffer_thread , NULL);
+
     }
 
     // never reached...
