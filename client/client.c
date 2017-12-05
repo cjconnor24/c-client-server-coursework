@@ -22,6 +22,9 @@ void send_string(int socket,char* response);
 char *read_string(int socket);
 void send_menu_choice(int socket, char choice, read_cb readfunction);
 
+// DECLARING GLOBAL TO CLOSE CONNECTION GRACEFULLY
+int sockfd;
+
 // SIGNAL HANDLER
 static void handler(int sig, siginfo_t *siginfo, void *context)
 {
@@ -32,7 +35,13 @@ static void handler(int sig, siginfo_t *siginfo, void *context)
 	// MEANS CONNECTION HAS FAILED
 	if(siginfo->si_signo==13){
 		printf("Connection to the server has been lost...\n\nExiting now\n");
+	close(sockfd);
 		exit(EXIT_FAILURE);
+	}
+
+	if(siginfo->si_signo==2){
+	printf("You are going to force quite the connection");
+	close(sockfd);
 	}
 
 }
@@ -425,8 +434,8 @@ int main(void)
         }
 
     // *** this code down to the next "// ***" does not need to be changed except the port number
-    int sockfd = 0;
-    struct sockaddr_in serv_addr;
+	sockfd = 0;
+	struct sockaddr_in serv_addr;
 
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 	perror("Error - could not create socket");
