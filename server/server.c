@@ -209,7 +209,7 @@ while (1) {
 
 	printf("Connection accepted...\n");
 
-
+	//client_handler(&connfd);
         // third parameter is a pointer to the thread function, fourth is its actual parameter
 	if (pthread_create(&sniffer_thread, NULL, client_handler,(void *) &connfd) < 0) {
 	    perror("could not create thread");
@@ -644,7 +644,7 @@ void *client_handler(void *socket_desc)
 	shutdown(connfd, SHUT_RDWR);
 	close(connfd);
 
-	pthread_exit(NULL);
+	//pthread_exit(NULL);
 
     return 0;
 }  // end client_handler()
