@@ -1,6 +1,3 @@
-// Cwk2: client.c - message length headers with variable sized payloads
-//  also use of readn() and writen() implemented in separate code module
-
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -16,7 +13,7 @@
 #include <signal.h>
 #define INPUTSIZ 10
 
-// CREATING TO ALLOW CALLBACK
+// CREATING TO ALLOW CALLBACK - ENDED UP CHANGING
 typedef void (*read_cb)(int socket);
 void send_string(int socket,char* response);
 char *read_string(int socket);
@@ -388,6 +385,28 @@ void get_file_list(int socket){
 	}
 }
 
+void write_file(char *filename, unsigned char *data){
+
+// OPEN THE NEW FILE
+FILE *fnew = fopen(filename,"wb");
+
+// GET THE SIZE
+int sz = strlen(data);
+
+
+// WRITE THE DATA TO THE BUFFER
+fwrite(data,1,sz,fnew);
+
+//CLOSE THE NEW FILE
+fclose(fnew);
+
+
+// FREE THE HEAP MEME
+//  free(buffer);
+
+
+}
+
 void get_file(int socket){
 
 
@@ -415,9 +434,13 @@ void get_file(int socket){
 			send_string(socket,filename);
 			
 			// HANDLE THE FILE FROM THE SERVER
-			//TODO: ACTUALLY GET THE FILE
-			char *server_response = read_string(socket);
-			printf("You request:\n%s\n",server_response);
+			//TODO: CHECK FILE EXISTS
+			// IF EXISTS DOWNLOAD
+
+			unsigned char *server_response = read_string(socket);
+			write_file(filename, server_response);
+			// IF NOT, OUTPUT MESSAGE
+		//	printf("You request:\n%s\n",server_response);
 			free(server_response);		
 
 		}
