@@ -302,6 +302,16 @@ void send_string(int socket, char *response){
 
 }
 
+// SEND DATA - i.e. UNSIGNED CHAR
+void send_data(int socket,int size, unsigned char *response){
+
+	size_t payload_length = size;
+
+	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
+	writen(socket, (unsigned char *)response, payload_length);
+
+}
+
 // GET THE CLIENT IP ADDRESS
 char *get_ip_address(){
 
@@ -400,7 +410,7 @@ int file_exists(char *filename){
 
 }
 
-unsigned char *get_file_string(char *filename){
+unsigned char *get_file_string(int sockfd, char *filename){
 
 	char *full_path = get_full_path(filename);
 
@@ -409,11 +419,12 @@ unsigned char *get_file_string(char *filename){
    forig = fopen(full_path, "rb");
 
 // OPEN THE NEW FILE
-//FILE *fnew = fopen("watchawa.png","wb");
 fseek(forig, 0L, SEEK_END);
 
 // GET THE SIZE
 int sz = ftell(forig);
+
+printf("The size of the file is %d bytes\n",sz);
 
 // CREATE CORRECT SIZE SPACE
 unsigned char *buffer = (unsigned char *)malloc(sizeof(char)*sz);
@@ -424,14 +435,12 @@ unsigned char *buffer = (unsigned char *)malloc(sizeof(char)*sz);
         // READ THE DATA
         fread(buffer, sz, 1, forig);
 
-// WRITE THE DATA TO THE BUFFER
-//fwrite(buffer,1,sz,fnew);
-
-//CLOSE THE NEW FILE
-//fclose(fnew);
+// SEND THE DATA
+send_data(sockfd,sz,buffer);
 
         // CLOSE THE OLD FILE
    fclose(forig);
+
 
 // FREE THE HEAP MEME
 //  free(buffer);
@@ -654,6 +663,7 @@ void *client_handler(void *socket_desc)
 			// CHECK TO SEE IF THE FILE EXISTS
 			if(file_exists(filename)!=-1){
 
+
 				strcat(response,filename);
 				strcat(response," Exists");
 
@@ -665,7 +675,9 @@ void *client_handler(void *socket_desc)
 
 			}
 
-			send_string(connfd,response);
+			unsigned char *data = get_file_string(connfd,filename);
+			//printf("size is: %d\n",strlen(data));
+			//send_data(connfd,data);
 			free(filename);
 		break;
 		case '7':
