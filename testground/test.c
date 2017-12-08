@@ -1,26 +1,43 @@
-// Cwk2: client.c - message length headers with variable sized payloads
-//  also use of readn() and writen() implemented in separate code module
-
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <netdb.h>
+#include <pthread.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 #include <errno.h>
-#include <arpa/inet.h>
-#include "rdwrn.h"
-
-#define INPUTSIZ 10
+#include <string.h>
+int main () {
 
 
-int main(void)
-{
+	// ORIGINAL FILE
+   FILE *forig;
+   forig = fopen("scrnshot.png", "rb");
 
+// OPEN THE NEW FILE
+FILE *fnew = fopen("watchawa.png","wb");
+fseek(forig, 0L, SEEK_END);
 
-	// TESTING GROUND FOR FUNCTIONS
+// GET THE SIZE
+int sz = ftell(forig);
 
-    exit(EXIT_SUCCESS);
-} // end main()
+// CREATE CORRECT SIZE SPACE
+unsigned char *buffer = (unsigned char *)malloc(sizeof(char)*sz);
+
+	// GO TO START OF FILE
+	fseek(forig, 0, SEEK_SET);
+
+	// READ THE DATA
+	fread(buffer, sz, 1, forig);
+
+// WRITE THE DATA TO THE BUFFER
+fwrite(buffer,1,sz,fnew);
+
+//CLOSE THE NEW FILE
+fclose(fnew);
+
+	// CLOSE THE OLD FILE
+   fclose(forig);
+
+// FREE THE HEAP MEME
+  free(buffer); 
+   return(0);
+}
