@@ -43,6 +43,9 @@ int connfd;			// CONNECTION TO CLOSE IN SIGHANDLER
 int listenfd;			// LISTENER TO CLOSE IN SIGHANDLER
 pthread_t sniffer_thread;	// SNIFFER THREAD WHICH WILL WAIT FOR PTHREAD_JOIN IN SIGHANDLER
 
+// CHANGE THIS FOR UPLOAD DIRECTORY TO SEARCH FILES
+char dirname[] = "./upload/";	// DIRECTORY NAME
+
 // SIGNAL HANDLER
 static void handler(int sig, siginfo_t *siginfo, void *context)
 {
@@ -115,6 +118,7 @@ void set_timer(struct timeval *timer){
 	}
 
 }
+
 
 // DISPLAY UPTIME OF SERVER
 //void uptime(struct timeval *start_time, struct timeval *end_time){
@@ -345,49 +349,93 @@ struct utsname *get_server_details(){
 
 }
 
+// FUNCTION TO BUILD FULL PATHNAME OF REQUESTED FILE
+char *get_full_path(char *filename){
+
+	// CREATE THE MEMORY
+	size_t strsize =(sizeof(char)*(strlen(filename)+strlen(dirname)+1));
+	char *full_path = (char *)malloc(strsize);
+
+	// INITIALISE
+	memset(full_path,'\0',strsize);
+
+	// WRITE THE PATH
+	snprintf(full_path,strsize,"%s%s",dirname,filename);
+
+	return full_path;
+
+}
+
 int file_exists(char *filename){
 
-FILE * file;
+	FILE * file;
 
-char folder[] = "./upload/";
-size_t strsize =(sizeof(char)*(strlen(filename)+strlen(folder)+1));
-char *full_path = (char *)malloc(strsize);
+	char *full_path = get_full_path(filename);
 
-memset(full_path,'\0',strsize);
+	file = fopen(full_path,"r");
+	int result;
+	
+	if (file){
 
-snprintf(full_path,strsize,"%s%s",folder,filename);
-printf("Full path: %s",full_path);
+		//DON'T DO ANYTHING, JUST CHECKING FOR PERMISSIONS
+		fclose(file);
+		result = 1;
 
-file = fopen(full_path,"r");
-int result;
-if (file){
+	} else {
 
-	//DON'T DO ANYTHING, JUST CHECKING FOR PERMISSIONS
-	fclose(file);
-	result = 1;
+		result = -1;
 
-} else {
+	}	
 
-	result = 0;
+	// MAKE SURE NOT NULL BEFORE FREEING MEMORY
+	if(full_path!=NULL){
+
+		free(full_path);
+		full_path = 0;
+
+	}	
+
+
+	return result;
 
 }
 
-// MAKE SURE NOT NULL BEFORE FREEING MEMORY
-if(full_path!=NULL){
+unsigned char *get_file_string(char *filename){
 
-	free(full_path);
-	full_path = 0;
+	char *full_path = get_full_path(filename);
 
-}
+        // ORIGINAL FILE
+   FILE *forig;
+   forig = fopen(full_path, "rb");
 
-/*if(file!=NULL){
+// OPEN THE NEW FILE
+//FILE *fnew = fopen("watchawa.png","wb");
+fseek(forig, 0L, SEEK_END);
 
-	free(file);
-	file = 0;
+// GET THE SIZE
+int sz = ftell(forig);
 
-}*/
+// CREATE CORRECT SIZE SPACE
+unsigned char *buffer = (unsigned char *)malloc(sizeof(char)*sz);
 
-return result;
+        // GO TO START OF FILE
+        fseek(forig, 0, SEEK_SET);
+
+        // READ THE DATA
+        fread(buffer, sz, 1, forig);
+
+// WRITE THE DATA TO THE BUFFER
+//fwrite(buffer,1,sz,fnew);
+
+//CLOSE THE NEW FILE
+//fclose(fnew);
+
+        // CLOSE THE OLD FILE
+   fclose(forig);
+
+// FREE THE HEAP MEME
+//  free(buffer);
+	return buffer;
 
 }
 
@@ -423,7 +471,7 @@ char *get_file_list(){
 	struct dirent **namelist;
 	int n;
 	
-	if ((n = scandir("./upload/", &namelist, NULL, alphasort)) != -1){
+	if ((n = scandir(dirname, &namelist, NULL, alphasort)) != -1){
   //      	perror("scandir");
 //		return "";
 //	} else {
@@ -597,13 +645,14 @@ void *client_handler(void *socket_desc)
 			printf("Client want's file\n");
 			send_string(connfd,"Which file would you like?");
 			char *filename = read_string(connfd);
+
 			printf("The client requested: %s\n",filename);
 
 			char response[255];
 			memset(response,'\0',255);
 
 			// CHECK TO SEE IF THE FILE EXISTS
-			if(file_exists(filename)){
+			if(file_exists(filename)!=-1){
 
 				strcat(response,filename);
 				strcat(response," Exists");
