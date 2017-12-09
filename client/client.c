@@ -164,6 +164,34 @@ char *read_string(int socket){
 
 }
 
+unsigned char *read_data(int socket){
+
+
+	// CALCULATE AND ALLOCATE MEMORY FOR THE RESULT
+	size_t memallocation = BUFSIZ;
+	unsigned char *result = (unsigned char *)malloc(memallocation);
+
+	if(result!=NULL){
+	
+	// INITIALISE EVERY PART OF MEM - WITHOUT WAS CAUSING VALG ISSUES
+	memset(result,'\0',memallocation);
+	
+	readn(socket, (unsigned char *) result, BUFSIZ);
+
+
+	return result;
+
+	// FREE UP THE RESULT
+	//free(result);
+	//result = NULL;
+
+	} else {
+
+		return NULL;	
+
+	}
+
+}
 // READ UTSNAME STRUCT FROM SERVER
 struct utsname *read_server_details(int socket){
 
@@ -433,15 +461,28 @@ void get_file(int socket){
 			// SEND THAT ACCROSS TO THE SERVER
 			send_string(socket,filename);
 			
-			// HANDLE THE FILE FROM THE SERVER
-			//TODO: CHECK FILE EXISTS
-			// IF EXISTS DOWNLOAD
+			// CHECK IF EXISTS
+			char *filesize = read_string(socket);
+			int sizeint = atoi(filesize);	
+			printf("The filesize is %d\n",sizeint);
 
-			unsigned char *server_response = read_string(socket);
-			write_file(filename, server_response);
-			// IF NOT, OUTPUT MESSAGE
-		//	printf("You request:\n%s\n",server_response);
-			free(server_response);		
+			FILE *newfile = fopen(filename,"wb");
+			int read = 0;
+			unsigned char *buffer = (unsigned char *)malloc(sizeof(BUFSIZ));
+			while(sizeint > 0){
+			//printf("LOOP RUNNING ON CLIENT");
+				//buffer = read_data(socket);
+				readn(socket, (unsigned char *)buffer, BUFSIZ);
+				fwrite(buffer,1,BUFSIZ,newfile);
+				sizeint = sizeint - BUFSIZ;
+			}
+
+			fclose(newfile);
+			free(buffer);
+			free(filesize);
+
+			
+
 
 		}
 
