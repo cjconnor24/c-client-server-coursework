@@ -303,14 +303,14 @@ void send_string(int socket, char *response){
 }
 
 // SEND DATA - i.e. UNSIGNED CHAR
-void send_data(int socket,int size, unsigned char *response){
+/*void send_data(int socket, unsigned char *response){
 
 	size_t payload_length = size;
 
 	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
 	writen(socket, (unsigned char *)response, payload_length);
 
-}
+}*/
 
 // GET THE CLIENT IP ADDRESS
 char *get_ip_address(){
@@ -376,6 +376,7 @@ char *get_full_path(char *filename){
 
 }
 
+// CHECK IF FILE EXISTS - RETURNS SIZE IF EXISTS
 int file_exists(char *filename){
 
 	FILE * file;
@@ -387,9 +388,10 @@ int file_exists(char *filename){
 	
 	if (file){
 
-		//DON'T DO ANYTHING, JUST CHECKING FOR PERMISSIONS
+		// GET THE FILE SIZE AND RETURN
+		fseek(file, 0L, SEEK_END);
+		result = ftell(file);
 		fclose(file);
-		result = 1;
 
 	} else {
 
@@ -436,7 +438,7 @@ unsigned char *buffer = (unsigned char *)malloc(sizeof(char)*sz);
         fread(buffer, sz, 1, forig);
 
 // SEND THE DATA
-send_data(sockfd,sz,buffer);
+//send_data(sockfd,sz,buffer);
 
         // CLOSE THE OLD FILE
    fclose(forig);
@@ -657,11 +659,43 @@ void *client_handler(void *socket_desc)
 
 			printf("The client requested: %s\n",filename);
 
-			char response[255];
-			memset(response,'\0',255);
+			//char response[255];
+			//memset(response,'\0',255);
+			int filesize = file_exists(filename);
+			printf("The filesize is %d\n",filesize);
 
+			//if(filesize!=-1){
+
+			char sizestr[20];
+			snprintf(sizestr,20,"%d",filesize);
+			send_string(connfd,sizestr);
+			FILE *file = fopen("./upload/small.jpg","rb");
+			FILE *newfile = fopen(filename,"wb");
+
+			//unsigned char *buffer = (unsigned char*)malloc(sizeof(BUFSIZ));
+			char buffer[24];
+			int read = 0;
+
+			// LOOP AND SEND IN BLOCKS
+			while((read = fread(buffer, 1, 16, file)) > 0){
+			//printf("LOOP RUNNING ON SERVER\n");
+			//writen(connfd, (unsigned char *)buffer, BUFSIZ);
+			fwrite(buffer,1, 16,newfile);
+			//send_data(connfd,&buffer);
+			
+	//size_t payload_length = size;
+
+	//writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
+
+			}
+			//free(buffer);
+			fclose(file);
+			fclose(newfile);
+			
+
+			//}
 			// CHECK TO SEE IF THE FILE EXISTS
-			if(file_exists(filename)!=-1){
+			/*if(file_exists(filename)!=-1){
 
 
 				strcat(response,filename);
@@ -673,9 +707,9 @@ void *client_handler(void *socket_desc)
 				strcat(response," Doesn't Exist");
 				//printf("IT DOESNT EXISTS\n");
 
-			}
+			}*/
 
-			unsigned char *data = get_file_string(connfd,filename);
+			//unsigned char *data = get_file_string(connfd,filename);
 			//printf("size is: %d\n",strlen(data));
 			//send_data(connfd,data);
 			free(filename);
