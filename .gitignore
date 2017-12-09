@@ -1,5 +1,7 @@
 # Prerequisites
 *.d
+# UPLOD DIR
+server/upload/*
 # SWAP FILES
 *.swp
 client/client
