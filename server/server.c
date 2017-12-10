@@ -674,7 +674,7 @@ void *client_handler(void *socket_desc)
 
 			// OPEN THE FILE TO SEND
 			FILE *file = fopen(path,"rb");
-			//FILE *newfile = fopen(path,"wb");
+			FILE *newfile = fopen(filename,"wb");
 
 			//unsigned char *buffer = (unsigned char*)malloc(sizeof(BUFSIZ));
 			char buffer[30];
@@ -685,11 +685,12 @@ void *client_handler(void *socket_desc)
 			// LOOP AND SEND IN BLOCKS
 			while((read = fread(buffer, 1, sendbuffer, file)) > 0){
 			//printf("LOOP RUNNING ON SERVER\n");
-			//writen(connfd, (unsigned char *)buffer, BUFSIZ);
+			//writen(connfd, (unsigned char *)buffer, sendbuffer);
+			//readn(connfd,NULL,2);
 			snprintf(strtemp,15,"%d",temp);
 			printf("The strtemp is %s\n",strtemp);
-			send_string(connfd,strtemp);
-			//fwrite(buffer,1, sendbuffer,newfile);
+			send_string(connfd,buffer);
+			fwrite(buffer,1, sendbuffer,newfile);
 			//send_data(connfd,&buffer);
 			temp++;
 	//size_t payload_length = size;
@@ -698,6 +699,7 @@ void *client_handler(void *socket_desc)
 
 			}
 			//free(buffer);
+			fclose(newfile);
 			fclose(file);
 			free(filename);
 		break;
