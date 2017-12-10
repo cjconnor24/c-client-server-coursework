@@ -22,7 +22,7 @@
 #include <signal.h>
 #include <sys/time.h>
 
-// thread function
+// FUNCTION PROTOTYPES
 void *client_handler(void *);
 void send_hello(int);
 char *get_ip_address();
@@ -34,16 +34,15 @@ void set_timer(struct timeval *timer);
 char *read_string(int);
 char *get_time();
 void output_log(char *);
-//void uptime(struct timeval *start_time, struct timeval *end_time);
 
 
 // GLOBAL VARS FOR SIGNAL HANDLER
 // I KNOW ITS BAD PRACTISE BUT ONLY WAY
 // I COULD ACCESS POINTERS IN THE SIG HANDLER
-struct timeval start_time, end_time; // START AND END TIME FOR EXECUTION TIME
-int connfd;			// CONNECTION TO CLOSE IN SIGHANDLER
-int listenfd;			// LISTENER TO CLOSE IN SIGHANDLER
-//pthread_t sniffer_thread;	// SNIFFER THREAD WHICH WILL WAIT FOR PTHREAD_JOIN IN SIGHANDLER
+struct timeval start_time, end_time;	// START AND END TIME FOR EXECUTION TIME
+int connfd;				// CONNECTION TO CLOSE IN SIGHANDLER
+int listenfd;				// LISTENER TO CLOSE IN SIGHANDLER
+//pthread_t sniffer_thread;		// SNIFFER THREAD WHICH WILL WAIT FOR PTHREAD_JOIN IN SIGHANDLER
 
 // CHANGE THIS FOR UPLOAD DIRECTORY TO SEARCH FILES
 char dirname[] = "./upload/";	// DIRECTORY NAME
@@ -61,7 +60,6 @@ static void handler(int sig, siginfo_t *siginfo, void *context)
 	//pthread_join(sniffer_thread,NULL);
 	set_timer(&end_time);
 
-	//printf("Server will shut down...Error %d\n",siginfo->si_signo);
 	// OUTPUT UPTIME TO CONSOLE
 	printf("----------------------------------\n");
 	printf("TOTAL UPTIME: %f SECONDS\n",(double)(end_time.tv_usec - start_time.tv_usec) / 1000000 + (double)(end_time.tv_sec - start_time.tv_sec));
@@ -83,9 +81,6 @@ static void handler(int sig, siginfo_t *siginfo, void *context)
 		//	perror("No listener was active");
 		}
 		
-	//	output_log("[!WARNING!] Server is going to shutdown in 3 seconds...");
-	//	sleep(3);
-
 		exit(EXIT_SUCCESS);
 	
 
@@ -142,6 +137,8 @@ void launch_screen(){
 
 }
 
+
+// HELPER FUNCTION TO OUTPUT ACTIVITY TO SERVER CONSOLE
 void output_log(char *message){
 	
 	char *current_time = get_time();
@@ -158,116 +155,98 @@ void output_log(char *message){
 
 }
 
-
-int main(void)
-{
-
-	// CREATE TIMERS FOR CALCULATING EXECUTION TIME
-	//struct timeval start_time, end_time;
-	set_timer(&start_time);
+// REGISTER THE SIGNAL HANDLER BEHAVIOR
+void register_sig_handler(){
 	
-	// DISPLAY LAUNCH SCREEN
-	launch_screen();
 
-	// SIGNAL HANDLER -----------------------
-	//TODO: SIGNAL HANDLER
+	// CREATE SIGACTION
 	struct sigaction act;
 	memset(&act, '\0', sizeof(act));
 
-	// this is a pointer to a function
+	// ASSIGN THE HANDLER FUNCTION - handler
 	act.sa_sigaction = &handler;
 	// the SA_SIGINFO flag tells sigaction() to use the sa_sigaction field, not sa_handler
 	act.sa_flags = SA_SIGINFO;
-
-	// DEBUG
-	//output_log("Sig Handler Assigned");
-
-        // HANDLE SIGPIPE
-	/*if (sigaction(SIGPIPE, &act, NULL) == -1) {
-		perror("sigaction");
-		exit(EXIT_FAILURE);
-	}*/
 
         // HAND SIGINT
         if (sigaction(SIGINT, &act, NULL) == -1) {
                 perror("sigaction");
                 exit(EXIT_FAILURE);
         }
-	
+
+	// HANDLE SIGPIP - i.e. IF CLIENT DIES	
         if (sigaction(SIGPIPE, &act, NULL) == -1) {
                 perror("sigaction");
                 exit(EXIT_FAILURE);
         }
 
-	// END
-	// SIGNAL HANDLER -----------------------
-
-	listenfd = 0;
-	
-	// ALREADY DEFINED AS A GLOBAL
-	connfd = 0;
-
-struct sockaddr_in serv_addr;
-struct sockaddr_in client_addr;
-socklen_t socksize = sizeof(struct sockaddr_in);
-listenfd = socket(AF_INET, SOCK_STREAM, 0);
-memset(&serv_addr, '0', sizeof(serv_addr));
-
-serv_addr.sin_family = AF_INET;
-serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-serv_addr.sin_port = htons(50031);
-
-bind(listenfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
-
-if (listen(listenfd, 10) == -1) {
-perror("Failed to listen");
-exit(EXIT_FAILURE);
 }
 
+// MAIN ENTRY POINT FOR PROGRAM
+int main(void)
+{
+	// REGISTER THE SIGNAL HANDLER WITH THE KERNEL
+	register_sig_handler();
 
+	// CREATE TIMERS FOR CALCULATING EXECUTION TIME
+	set_timer(&start_time);
+	
+	// DISPLAY LAUNCH SCREEN
+	launch_screen();
+	
+	// SETUP THE LISTER FOR CLIENTS
+	listenfd = 0;
+	connfd = 0;
+	
 
-	// SETUP THREAD MASK TO STOP ENTIRE PROCESS DYING ON SIGPIPE IN THREAD
-/*	sigset_t set;
-	sigemptyset(&set);
-	sigaddset(&set, SIGPIPE);
-	//sigaddset(&set, SIGINT);
-	pthread_sigmask(SIG_BLOCK, &set, NULL);
-	sigset_t set;
-	sigaddset(&set,SIGPIPE);
-	pthread_sigmask(SIG_BLOCK,&set,NULL);*/
+	struct sockaddr_in serv_addr;
+	struct sockaddr_in client_addr;
+	socklen_t socksize = sizeof(struct sockaddr_in);
+	listenfd = socket(AF_INET, SOCK_STREAM, 0);
+	memset(&serv_addr, '0', sizeof(serv_addr));
 
-	 //Accept and incoming connection
-	//puts("Waiting for incoming connections...");
-	output_log("-- WAITING FOR INCOMING CONNECTIONS --");
+	serv_addr.sin_family = AF_INET;
+	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	serv_addr.sin_port = htons(50031);
+	
+	bind(listenfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
 
-while (1) {
+	if (listen(listenfd, 10) == -1) {
 
+		perror("Failed to listen");
+		exit(EXIT_FAILURE);
 
-	// WAIT ON A CLIENT CONNECTION
-	connfd = accept(listenfd, (struct sockaddr *) &client_addr, &socksize);
-
-	// OUTPUT CLIENT DETAILS TO LOG
-	char tmpmsg[100];
-	snprintf(tmpmsg,100,"Client connection from %s",inet_ntoa(client_addr.sin_addr));
-	output_log(tmpmsg);
-
-	pthread_t sniffer_thread;
-	//client_handler(&connfd);
-        // third parameter is a pointer to the thread function, fourth is its actual parameter
-	if (pthread_create(&sniffer_thread, NULL, client_handler,(void *) &connfd) < 0) {
-	    perror("could not create thread");
-	    exit(EXIT_FAILURE);
 	}
 
-	//Now join the thread , so that we dont terminate before the thread
-	//printf("--------------------\n");
-	//printf("Handler assigned\n");
-	//printf("--------------------\n");
-	
-	// THIS NEED TO BE INSIDE A HANDLER FOR SIGNAL
-	//set_timer(&end_time);
 
-	pthread_join( sniffer_thread , NULL);
+
+
+	// WAIT FOR INCOMING CONNECTIONS
+	output_log("-- WAITING FOR INCOMING CONNECTIONS --");
+
+	// INFINITE LOOP TO ALWAYS LISTEN FOR CLIENTS
+	while (1) {
+
+
+		// WAIT ON A CLIENT CONNECTION
+		connfd = accept(listenfd, (struct sockaddr *) &client_addr, &socksize);
+
+		// OUTPUT CLIENT DETAILS TO LOG
+		char tmpmsg[100];
+		snprintf(tmpmsg,100,"Client connection from %s",inet_ntoa(client_addr.sin_addr));
+		output_log(tmpmsg);
+
+		// CREATE THREAD WHICH WILL RUN client_handler
+		pthread_t sniffer_thread;
+		if (pthread_create(&sniffer_thread, NULL, client_handler,(void *) &connfd) < 0) {
+		    perror("could not create thread");
+		    exit(EXIT_FAILURE);
+		}
+	
+	// THIS IS CAUSING ISSUES WITH MEMORY LEAK
+	// IF I COMMENT OUT, I GET 272 bytes...IF I DONT, MULTIPLE CLIENTS CANNOT CONNECT
+	// BECAUSE THREAD IS BEING INSTANTLY JOINED
+	// pthread_join( sniffer_thread , NULL);
 
     }
 
