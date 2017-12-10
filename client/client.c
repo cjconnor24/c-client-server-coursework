@@ -305,23 +305,26 @@ char *get_full_path(char *filename){
 
 }
 
-// GET FILE NAME
+// GET FILE NAME FROM USER
 char *get_file_name(){
 
-
-	// GET OPTION FROM USER
-	printf("Please enter the name of the file\n");
-	printf("that you would like to download\n\n");
+	// DISPLAY INSTRUCTION TO USER
+	//printf("Please enter the name of the file\n");
+	//printf("that you would like to download\n\n");
 	printf("Filename> ");
 
+	// SET ASIDE SOME SPACE FOR THE RESPONSE
 	int input_size = 255;
 	char filename[input_size];	
 
+	// LOOP UNTIL INPUT IS NOT BLANK
 	do {
-
+		
+		// GET THE INPUT FROM THE USER
 		fgets(filename, input_size, stdin);	
 		filename[strcspn(filename, "\n")] = 0;
-
+		
+		// MAKE SURE ISN"T BLANK, IF SO REDISPLAY INSTRUCTION
 		if(strlen(filename)<=0){
 
 			printf("You must type a filename\n");
@@ -331,20 +334,23 @@ char *get_file_name(){
 
 	} while(strlen(filename) <= 0);
 
-	//printf("The string is %zu chars long\n",strlen(filename));
-	//input = name[0];
 
+	// CREATE A POINT TO ALLOCATE THE RIGHT SIZE
 	char *result = (char *)malloc((sizeof(char)*strlen(filename)+1));
 	memset(result,'\0',strlen(filename)+1);
 	
+	// MAKE SURE ISNT NULL POINTER
 	if(result!=NULL){
-	strcpy(result,filename);
-	return result;
+
+		strcpy(result,filename);
+		return result;
+
 	} else {
-	return NULL;
+
+		return NULL;
+
 	}
 	
-//	printf("You entered %s\n",filename);
 }
 
 // GET STUDENT INFO FROM SERVER
@@ -433,7 +439,7 @@ void get_file_list(int socket){
 	}
 }
 
-void write_file(char *filename, unsigned char *data){
+/*void write_file(char *filename, unsigned char *data){
 
 // OPEN THE NEW FILE
 FILE *fnew = fopen(filename,"wb");
@@ -453,7 +459,7 @@ fclose(fnew);
 //  free(buffer);
 
 
-}
+}*/
 
 // TODO: REFACTOR CODE TO REDUCE NESTED IFS
 // DOWNLOAD FILE FROM SERVER
@@ -469,83 +475,132 @@ void get_file(int socket){
 	// MAKE SURE IT ISN'T NULL
 	if(result!=NULL){
 
-	// DISPLAY AND CLEAR THE MEMORY
-	printf("%s\n",result);
-	free(result);
-	result = NULL;
+		// DISPLAY AND CLEAR THE MEMORY
+		printf("%s\n",result);
+		free(result);
+		result = NULL;
 
-	// GET FILENAME FROM USER
-	char *filename = get_file_name();
+		// GET FILENAME FROM USER
+		char *filename = get_file_name();
+		
+			// MAKE SURE IT ISN'T NULL
+			if(filename!=NULL){
 	
-		// MAKE SURE IT ISN'T NULL
-		if(filename!=NULL){
-
-			// SEND FILE NAME TO SERVER
-			send_string(socket,filename);
+				// SEND FILE NAME TO SERVER
+				send_string(socket,filename);
+				
+				// CHECK IF EXISTS AND GET THE SIZE - (-1) MEANS DOESNT EXIST
+				char *filesize = read_string(socket);
+				int sizeint = atoi(filesize);
+	
+				// CHECK FILE EXISTS - IF SO GO AHEAD
+				if(sizeint!=-1){
+		
+					printf("The filesize is %d\n",sizeint); // DEBUG
+				
+					// GET FULL PATH TO DOWNLOAD DIRECTORY	
+					char *fullpath = get_full_path(filename);	
+		
+					// TODO: CHECK IF FILE EXISTS LOCALLY
+					FILE *temp = fopen(fullpath,"r");
+					
+					// FILE EXISTS, LET USER KNOW
+					if(temp){
+	
+						// CLOSE THE FILE	
+						fclose(temp);
+	
+						printf("%s already exists. Please enter a new filename:\n",filename);
+						char *newfilename;
+						int check = -1;
+		
+							// LOOP UNTIL DOESNT = OLD NAME
+							do {
 			
-			// CHECK IF EXISTS AND GET THE SIZE - (-1) MEANS DOESNT EXIST
-			char *filesize = read_string(socket);
-			int sizeint = atoi(filesize);
-
-			// CHECK FILE EXISTS - IF SO GO AHEAD
-			if(sizeint!=-1){
+								newfilename = get_file_name();
+							
+								// IF THEY ENTERED THE SAME NAME	
+								if(*filename==*newfilename){
 	
-				printf("The filesize is %d\n",sizeint); // DEBUG
+									printf("You entered the same name\n");
+								
+									// RELEASE ANY USEAGE	
+									if(newfilename!=NULL){
+	
+										free(newfilename);
+	
+									}
+	
+								} else {
+									// NAME DOESNT MATCH - BREAK LOOP
+									check = 0;
+	
+								}
 			
-				// GET FULL PATH TO DOWNLOAD DIRECTORY	
-				char *fullpath = get_full_path(filename);	
+							}while(check);
+						
+						// MAKE THE NEW FILE PATH
+						free(fullpath);
+						fullpath = get_full_path(newfilename);
 	
-				// TODO: CHECK IF FILE EXISTS LOCALLY
-				FILE *temp = fopen(fullpath,"r");
-				// FILE EXISTS, LET USER KNOW
-				// TODO: ASK IF THEY WANT TO OVERWRITE
-				if(temp){
-				printf("Note: %s already exists and will be overwritten.\n",filename);
-				fclose(temp);
+						free(filename);
+						filename = newfilename;
+						
+						//DONT NEED TO FREE AS SAME MEMORY LOCATION NOW
+						//free(newfilename);
+	
+					}
+						
+					// OPEN THE NEW FILE TO WRITE ON CLIENT SIDE
+					FILE *newfile = fopen(fullpath,"wb");
+	
+					
+					// BLOCK SIZE TO RECEIVE
+					int sendbuffer = 30;			
+					
+					// LOOP UNTIL WHOLE FILE HAS BEEN RECEIVED
+					while(sizeint > 0){
+						
+						// CREATE A WRITE BUFFER SO AS NOT TO WRITE TOO MUCH DATA
+						int writebuffer = (sizeint < sendbuffer ? sizeint : sendbuffer);
+					
+						// SET ASIDE SOME SPACE TO STORE THE CURRENT BLOCK	
+						unsigned char *temp = (unsigned char *)malloc(writebuffer);
+						readn(socket, (unsigned char *)temp, writebuffer);
+						
+						// WRITE THE CURRENT BLOCK TO THE FILE
+						fwrite(temp,1,writebuffer,newfile);
+						
+						// FREE UP THE TEMP AREA	
+						free(temp);
+						sizeint = sizeint - sendbuffer;
+					}
+	
+					// FREE UP ALLOCATED RESOURCES	
+					fclose(newfile);
+					free(filesize);
+					free(fullpath);
+	
+					printf("%s was successfully downloaded.\n\n",filename);
+	
+				} else {
+	
+					// LET USER KNOW, THE FILE DOESNT EXIST
+					printf("Sorry, %s does not exist on the server\n",filename);			
+	
 				}
-				
-				// OPEN THE NEW FILE TO WRITE ON CLIENT SIDE
-				FILE *newfile = fopen(fullpath,"wb");
 
-				
-				// BLOCK SIZE TO RECEIVE
-				int sendbuffer = 30;			
-				
-				// LOOP UNTIL WHOLE FILE HAS BEEN RECEIVED
-				while(sizeint > 0){
-					
-					// CREATE A WRITE BUFFER SO AS NOT TO WRITE TOO MUCH DATA
-					int writebuffer = (sizeint < sendbuffer ? sizeint : sendbuffer);
-				
-					// SET ASIDE SOME SPACE TO STORE THE CURRENT BLOCK	
-					unsigned char *temp = (unsigned char *)malloc(writebuffer);
-					readn(socket, (unsigned char *)temp, writebuffer);
-					
-					// WRITE THE CURRENT BLOCK TO THE FILE
-					fwrite(temp,1,writebuffer,newfile);
-					
-					// FREE UP THE TEMP AREA	
-					free(temp);
-					sizeint = sizeint - sendbuffer;
-				}
-
-				// FREE UP ALLOCATED RESOURCES	
-				fclose(newfile);
-				free(filesize);
-				free(fullpath);
-
-			} else {
-
-				// LET USER KNOW, THE FILE DOESNT EXIST
-				printf("Sorry, %s does not exist on the server\n",filename);			
 
 			}
+		free(result);
+		free(filename);
 
-
-		}
-
-	free(filename);
-
+	}
+	
+	
+	if(result!=NULL){
+	free(result);
+	result=NULL;
 	}
 
 }
