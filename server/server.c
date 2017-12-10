@@ -677,7 +677,7 @@ void *client_handler(void *socket_desc)
 			//FILE *newfile = fopen(path,"wb");
 
 			//unsigned char *buffer = (unsigned char*)malloc(sizeof(BUFSIZ));
-			char buffer[24];
+			char buffer[30];
 			int read = 0;
 			int temp = 0;
 			char strtemp[15];
@@ -699,28 +699,6 @@ void *client_handler(void *socket_desc)
 			}
 			//free(buffer);
 			fclose(file);
-			//fclose(newfile);
-			
-
-			//}
-			// CHECK TO SEE IF THE FILE EXISTS
-			/*if(file_exists(filename)!=-1){
-
-
-				strcat(response,filename);
-				strcat(response," Exists");
-
-			} else {
-
-				strcat(response,filename);
-				strcat(response," Doesn't Exist");
-				//printf("IT DOESNT EXISTS\n");
-
-			}*/
-
-			//unsigned char *data = get_file_string(connfd,filename);
-			//printf("size is: %d\n",strlen(data));
-			//send_data(connfd,data);
 			free(filename);
 		break;
 		case '7':
