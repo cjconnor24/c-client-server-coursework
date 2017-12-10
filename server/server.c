@@ -450,7 +450,8 @@ void send_file(int socket){
 		
 		// FREE UP ALLOCATED RESOURCES
 		fclose(file);
-		free(filename);
+		//free(filename);
+		free(path);
 
 	}
 
