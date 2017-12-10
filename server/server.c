@@ -454,6 +454,11 @@ void send_file(int socket){
 
 	}
 
+	// FREE UP THE FILENAME
+	if(filename!=NULL){
+		free(filename);
+	}
+
 }
 
 // SEND THE SERVER FILE LIST BACK TO CLIENT
