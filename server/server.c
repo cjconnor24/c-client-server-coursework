@@ -669,20 +669,29 @@ void *client_handler(void *socket_desc)
 			char sizestr[20];
 			snprintf(sizestr,20,"%d",filesize);
 			send_string(connfd,sizestr);
-			FILE *file = fopen("./upload/small.jpg","rb");
-			FILE *newfile = fopen(filename,"wb");
+
+			char *path = get_full_path(filename);			
+
+			// OPEN THE FILE TO SEND
+			FILE *file = fopen(path,"rb");
+			//FILE *newfile = fopen(path,"wb");
 
 			//unsigned char *buffer = (unsigned char*)malloc(sizeof(BUFSIZ));
 			char buffer[24];
 			int read = 0;
-
+			int temp = 0;
+			char strtemp[15];
+			int sendbuffer = 30;
 			// LOOP AND SEND IN BLOCKS
-			while((read = fread(buffer, 1, 16, file)) > 0){
+			while((read = fread(buffer, 1, sendbuffer, file)) > 0){
 			//printf("LOOP RUNNING ON SERVER\n");
 			//writen(connfd, (unsigned char *)buffer, BUFSIZ);
-			fwrite(buffer,1, 16,newfile);
+			snprintf(strtemp,15,"%d",temp);
+			printf("The strtemp is %s\n",strtemp);
+			send_string(connfd,strtemp);
+			//fwrite(buffer,1, sendbuffer,newfile);
 			//send_data(connfd,&buffer);
-			
+			temp++;
 	//size_t payload_length = size;
 
 	//writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
@@ -690,7 +699,7 @@ void *client_handler(void *socket_desc)
 			}
 			//free(buffer);
 			fclose(file);
-			fclose(newfile);
+			//fclose(newfile);
 			
 
 			//}

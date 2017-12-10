@@ -468,13 +468,19 @@ void get_file(int socket){
 
 			FILE *newfile = fopen(filename,"wb");
 			int read = 0;
-			unsigned char *buffer = (unsigned char *)malloc(sizeof(BUFSIZ));
+
+			int sendbuffer = 30;			
+
+			unsigned char *buffer = (unsigned char *)malloc(sizeof(sendbuffer));
 			while(sizeint > 0){
 			//printf("LOOP RUNNING ON CLIENT");
 				//buffer = read_data(socket);
-				readn(socket, (unsigned char *)buffer, BUFSIZ);
-				fwrite(buffer,1,BUFSIZ,newfile);
-				sizeint = sizeint - BUFSIZ;
+				char *temp = read_string(socket);
+				printf("String is %s\n",temp);
+				free(temp);
+				//readn(socket, (unsigned char *)buffer, BUFSIZ);
+				//fwrite(buffer,1,BUFSIZ,newfile);
+				sizeint = sizeint - sendbuffer;
 			}
 
 			fclose(newfile);
