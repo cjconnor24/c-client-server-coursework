@@ -477,9 +477,10 @@ void get_file(int socket){
 				//buffer = read_data(socket);
 				char *temp = read_string(socket);
 				printf("String is %s\n",temp);
+				//readn(socket, (unsigned char *)buffer, sendbuffer);
+				//writen(socket, (unsigned char)"1", 2);
+				fwrite(temp,1,sendbuffer,newfile);
 				free(temp);
-				//readn(socket, (unsigned char *)buffer, BUFSIZ);
-				//fwrite(buffer,1,BUFSIZ,newfile);
 				sizeint = sizeint - sendbuffer;
 			}
 
