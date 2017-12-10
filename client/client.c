@@ -234,13 +234,28 @@ struct utsname *read_server_details(int socket){
 
 }
 
+
+// SMALL HELPER FUNCTION TO FORMAT DATA CONSISTENTLY - WILL AIM TO CENTER TEXT IN BOX
+void display_heading(char *message){
+
+	int messagelen = strlen(message);
+	int linelen = 38;
+	int centerpoint = (linelen-messagelen)/2;
+	int leftpad = (messagelen+centerpoint)-1;
+	int rightpad = (linelen-leftpad)-3;
+	
+
+	printf("+-----------------------------------+\n");
+	printf("|%*s%*s|\n",leftpad,message,rightpad,"");
+	printf("+-----------------------------------+\n");
+
+}
+
 // DISPLAY MENU OPTIONS TO USER
 void displaymenu()
 {
-    
-	printf("+-----------------------------------+\n");
-	printf("|      MENU                         |\n");
-	printf("+-----------------------------------+\n");
+   
+	display_heading("MENU"); 
 	printf("|  [0]\tRe-display menu             |\n");
 	printf("+-----------------------------------+\n");
 	printf("|  [1]\tGet Student Information     |\n");
@@ -251,13 +266,6 @@ void displaymenu()
 	printf("+-----------------------------------+\n");
 	printf("|  [6]\tExit                        |\n");
 	printf("+-----------------------------------+\n\n");
-
-}
-
-// SMALL HELPER FUNCTION TO FORMAT DATA CONSISTENTLY
-void display_heading(char *message){
-
-printf("\n%s\n-------------------\n",message);
 
 }
 
@@ -693,6 +701,7 @@ int main(void)
 			//printf("Retrieve file list\n");
 			//display_heading("Server File List");
 			//send_menu_choice(sockfd, '4',read_string);
+			display_heading("Download File");
 			get_file(sockfd);
 			break;
 		case '6':
