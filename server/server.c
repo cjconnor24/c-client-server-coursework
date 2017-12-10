@@ -689,7 +689,8 @@ void *client_handler(void *socket_desc)
 			//readn(connfd,NULL,2);
 			snprintf(strtemp,15,"%d",temp);
 			printf("The strtemp is %s\n",strtemp);
-			send_string(connfd,buffer);
+			//send_string(connfd,buffer);
+			writen(connfd,(unsigned char *)buffer,sendbuffer);
 			fwrite(buffer,1, sendbuffer,newfile);
 			//send_data(connfd,&buffer);
 			temp++;

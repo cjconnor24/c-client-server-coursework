@@ -475,13 +475,23 @@ void get_file(int socket){
 			while(sizeint > 0){
 			//printf("LOOP RUNNING ON CLIENT");
 				//buffer = read_data(socket);
-				char *temp = read_string(socket);
+				//char *temp = read_string(socket);
+
+				int writebuffer;
+				if(sizeint < sendbuffer){
+					writebuffer = sizeint;
+				} else {
+					writebuffer = sendbuffer;
+				}
+
+				unsigned char *temp = (unsigned char *)malloc(sendbuffer);
 				printf("String is %s\n",temp);
-				//readn(socket, (unsigned char *)buffer, sendbuffer);
+				readn(socket, (unsigned char *)temp, sendbuffer);
 				//writen(socket, (unsigned char)"1", 2);
-				fwrite(temp,1,sendbuffer,newfile);
+				fwrite(temp,1,writebuffer,newfile);
 				free(temp);
 				sizeint = sizeint - sendbuffer;
+				printf("SIZEINT: %d\n WRITEBUFFER: %d",sizeint,writebuffer);
 			}
 
 			fclose(newfile);
