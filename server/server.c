@@ -447,7 +447,7 @@ int file_exists(char *filename){
 void send_file(int socket){
 
 	// SIMPLE HANDSHAKE TO START PROCESS
-	send_string(connfd,"Which file would you like?");
+	send_string(connfd,"Which file would you like to download?");
 
 	// GET FILENAME FROM CLIENT
 	char *filename = read_string(socket);
