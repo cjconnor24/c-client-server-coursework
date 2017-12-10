@@ -470,32 +470,26 @@ void get_file(int socket){
 			int read = 0;
 
 			int sendbuffer = 30;			
-
-			unsigned char *buffer = (unsigned char *)malloc(sizeof(sendbuffer));
+			
+			// LOOP UNTIL WHOLE FILE HAS BEEN RECEIVED
 			while(sizeint > 0){
-			//printf("LOOP RUNNING ON CLIENT");
-				//buffer = read_data(socket);
-				//char *temp = read_string(socket);
-
-				int writebuffer;
-				if(sizeint < sendbuffer){
-					writebuffer = sizeint;
-				} else {
-					writebuffer = sendbuffer;
-				}
-
-				unsigned char *temp = (unsigned char *)malloc(sendbuffer);
-				printf("String is %s\n",temp);
+				
+				// CREATE A WRITE BUFFER SO AS NOT TO WRITE TOO MUCH DATA
+				int writebuffer = (sizeint < sendbuffer ? sizeint : sendbuffer);
+			
+				// SET ASIDE SOME SPACE TO STORE THE CURRENT BLOCK	
+				unsigned char *temp = (unsigned char *)malloc(writebuffer);
 				readn(socket, (unsigned char *)temp, sendbuffer);
-				//writen(socket, (unsigned char)"1", 2);
+				
+				// WRITE THE CURRENT BLOCK TO THE FILE
 				fwrite(temp,1,writebuffer,newfile);
+				
+				// FREE UP THE TEMP AREA	
 				free(temp);
 				sizeint = sizeint - sendbuffer;
-				printf("SIZEINT: %d\n WRITEBUFFER: %d",sizeint,writebuffer);
 			}
 
 			fclose(newfile);
-			free(buffer);
 			free(filesize);
 
 			
