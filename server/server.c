@@ -680,7 +680,7 @@ void *client_handler(void *socket_desc)
 	int connfd = *(int *) socket_desc;
 
 	// SEND WELCOME MESSAGE
-	send_hello(connfd);
+	//send_hello(connfd);
 
 	// CREATE A SPACE FOR THE MENU CHOICE
 	char *menu_choice = (char *)malloc(sizeof(char));
