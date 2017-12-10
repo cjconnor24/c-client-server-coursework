@@ -33,6 +33,8 @@ char *get_file_list();
 char *build_list(char *old, char *new);
 void set_timer(struct timeval *timer);
 char *read_string(int);
+char *get_time();
+void output_log(char *);
 //void uptime(struct timeval *start_time, struct timeval *end_time);
 
 
@@ -52,24 +54,25 @@ static void handler(int sig, siginfo_t *siginfo, void *context)
 {
 
 	// DEBUGGING INFO
-	printf("The signal no was %d\n",sig);
-	printf("PID: %ld, UID: %ld\n",
-	(long) siginfo->si_pid, (long) siginfo->si_uid);
+	//printf("The signal no was %d\n",sig);
+	//printf("PID: %ld, UID: %ld\n",
+	//(long) siginfo->si_pid, (long) siginfo->si_uid);
 
 	// WAIT ON ALL THREADS ENDING BEFORE CLOSE
 	pthread_join(sniffer_thread,NULL);
 	set_timer(&end_time);
-	//uptime(start_timer,end_time);
-	printf("Server will shut down...Error %d\n",siginfo->si_signo);
 
+	//printf("Server will shut down...Error %d\n",siginfo->si_signo);
+	// OUTPUT UPTIME TO CONSOLE
 	printf("----------------------------------\n");
 	printf("TOTAL UPTIME: %f SECONDS\n",(double)(end_time.tv_usec - start_time.tv_usec) / 1000000 + (double)(end_time.tv_sec - start_time.tv_sec));
 	printf("----------------------------------\n");
 
 	// HANDLE SIGPIPE	
 	if(siginfo->si_signo==13){
-		printf("13 triggered\n");
-	/*
+		
+		output_log("SIGPIPE (13) Signal Received");
+	
 		if(close(connfd)==-1){
 		// IF THIS TRIGGERS -1 - THERE WAS NO ACTIVE CONNECTION FROM CLIENT
 		//	perror("No active connections to close. ");
@@ -80,7 +83,12 @@ static void handler(int sig, siginfo_t *siginfo, void *context)
 		// IF THIS TRIGGERS -1 THE LISTENER WASN'T ACTIVE
 		//	perror("No listener was active");
 		}
-	*/
+		
+	//	output_log("[!WARNING!] Server is going to shutdown in 3 seconds...");
+	//	sleep(3);
+
+		exit(EXIT_SUCCESS);
+	
 
 	}
 
@@ -89,24 +97,19 @@ static void handler(int sig, siginfo_t *siginfo, void *context)
 	
 		// TRY AND CLOSE ANY CLIENT CONNECTIONS GRACEFULLY
 		if(close(connfd)==-1){
-		// IF THIS TRIGGERS -1 - THERE WAS NO ACTIVE CONNECTION FROM CLIENT
-			perror("No active connections to close. ");
+			// IF THIS TRIGGERS -1 - THERE WAS NO ACTIVE CONNECTION FROM CLIENT
+			//perror("No active connections to close. ");
 		}
 	
 		// TRY AND CLOSE THE LISTENER GRACEFULLY 
 		if(close(listenfd)==-1){
-		// IF THIS TRIGGERS -1 THE LISTENER WASN'T ACTIVE
-			perror("No listener was active");
+			// IF THIS TRIGGERS -1 THE LISTENER WASN'T ACTIVE
+			//perror("No listener was active");
 		}
 
-
-		printf("\nServer will shutdown in...\n\n");
-
-		int i;
-		for(i = 3; i > 0; i--){
-			printf("%d...\n",i);
-			sleep(1);
-		}
+		// OUTPUT MESSAGE THEN SHUTDOWN IN 3 SECONDS
+		output_log("[!WARNING!] Server is going to shutdown in 3 seconds...");
+		sleep(3);
 
 		exit(EXIT_SUCCESS);
 
@@ -124,6 +127,40 @@ void set_timer(struct timeval *timer){
 
 }
 
+// SIMPLE LAUNCH SCREEN FOR DEMO PURPOSES AND TO SHOW MY DETAILS
+void launch_screen(){
+	
+	printf("  ______ _____ _      ______    _____ ______ _______      ________ _____  \n");
+	printf(" |  ____|_   _| |    |  ____|  / ____|  ____|  __ \\ \\    / /  ____|  __ \\ \n");
+	printf(" | |__    | | | |    | |__    | (___ | |__  | |__) \\ \\  / /| |__  | |__) |\n");
+	printf(" |  __|   | | | |    |  __|    \\___ \\|  __| |  _  / \\ \\/ / |  __| |  _  / \n");
+	printf(" | |     _| |_| |____| |____   ____) | |____| | \\ \\  \\  /  | |____| | \\ \\ \n");
+	printf(" |_|    |_____|______|______| |_____/|______|_|  \\_\\  \\/   |______|_|  \\_\\\n");
+	printf("--------------------------------------------------------------------------\n\n");
+	printf("\tStudent: Chris Connor\n");
+	printf("\t    SID: S1715477\n");
+	printf("\t  Email: cconno208@caledonian.ac.uk / chris@chrisconnor.co.uk\n");
+	printf("\t GitHub: https://www.github.com/cjconnor24/sp-c-coursework (PRIVATE REPO)\n\n");
+	printf("--------------------------------------------------------------------------\n\n");
+
+}
+
+void output_log(char *message){
+	
+	char *current_time = get_time();
+
+	printf("[%s]:\t%s\n",current_time,message);
+
+	if(current_time!=NULL){
+	//	free(current_time);
+	}
+
+	if(message!=NULL){
+	//	free(message);
+	}
+
+}
+
 
 int main(void)
 {
@@ -131,6 +168,9 @@ int main(void)
 	// CREATE TIMERS FOR CALCULATING EXECUTION TIME
 	//struct timeval start_time, end_time;
 	set_timer(&start_time);
+	
+	// DISPLAY LAUNCH SCREEN
+	launch_screen();
 
 	// SIGNAL HANDLER -----------------------
 	//TODO: SIGNAL HANDLER
@@ -143,7 +183,7 @@ int main(void)
 	act.sa_flags = SA_SIGINFO;
 
 	// DEBUG
-	printf("Sig Handler Assigned\n");
+	output_log("Sig Handler Assigned");
 
         // HANDLE SIGPIPE
 	/*if (sigaction(SIGPIPE, &act, NULL) == -1) {
@@ -187,6 +227,8 @@ perror("Failed to listen");
 exit(EXIT_FAILURE);
 }
 
+
+
 	// SETUP THREAD MASK TO STOP ENTIRE PROCESS DYING ON SIGPIPE IN THREAD
 /*	sigset_t set;
 	sigemptyset(&set);
@@ -197,19 +239,21 @@ exit(EXIT_FAILURE);
 	sigaddset(&set,SIGPIPE);
 	pthread_sigmask(SIG_BLOCK,&set,NULL);*/
 
-    //Accept and incoming connection
-puts("Waiting for incoming connections...");
+	 //Accept and incoming connection
+	//puts("Waiting for incoming connections...");
+	output_log("-- WAITING FOR INCOMING CONNECTIONS --");
+
 while (1) {
 
 
-
-	
-
-	printf("Waiting for a client to connect...\n");
+	// WAIT ON A CLIENT CONNECTION
 	connfd = accept(listenfd, (struct sockaddr *) &client_addr, &socksize);
 
+	// OUTPUT CLIENT DETAILS TO LOG
+	char tmpmsg[100];
+	snprintf(tmpmsg,100,"Client connection from %s",inet_ntoa(client_addr.sin_addr));
+	output_log(tmpmsg);
 
-	printf("Connection accepted...\n");
 
 	//client_handler(&connfd);
         // third parameter is a pointer to the thread function, fourth is its actual parameter
@@ -219,11 +263,9 @@ while (1) {
 	}
 
 	//Now join the thread , so that we dont terminate before the thread
-	printf("--------------------\n");
-	printf("Handler assigned\n");
-	printf("--------------------\n");
-
-
+	//printf("--------------------\n");
+	//printf("Handler assigned\n");
+	//printf("--------------------\n");
 	
 	// THIS NEED TO BE INSIDE A HANDLER FOR SIGNAL
 	//set_timer(&end_time);
@@ -254,13 +296,17 @@ char *get_time(){
 	//        exit(EXIT_FAILURE);
 	}
 
+	// STRIP THE \N FROM TIME
+	char *split = strtok(asctime(tm),"\n");
 	// RETURN THE TIME
-	return asctime(tm);
+	//return asctime(tm);
+	return split;
 
 }
 
 // SEND THE STUDENT NAME AND NUMBER
 void send_student_info(int socket){
+
 
 	// BUILD UP THE STRING TO SEND
 	char *ipaddress = get_ip_address();
@@ -409,11 +455,11 @@ void send_file(int socket){
 	// GET FILENAME FROM CLIENT
 	char *filename = read_string(socket);
 
-	printf("The client requested: %s\n",filename);
+	//printf("The client requested: %s\n",filename);
 
 	// CHECK IF THE FILE EXISTS
 	int filesize = file_exists(filename);
-	printf("The filesize is %d\n",filesize);
+	//printf("The filesize is %d\n",filesize);
 
 	// SET ASIDE SPACE FOR FILESIZE AND SEND AS A STRING
 	char sizestr[20];
@@ -433,7 +479,10 @@ void send_file(int socket){
 		int read = 0;
 				
 		// LOG TO CONSOLE FILE SEND WILL BEING
-		printf("%s will now be sent to the client.\n",filename);
+		char tmpmsg[100];
+		snprintf(tmpmsg,100,"%s will be sent to the client",filename);
+		output_log(tmpmsg);
+	//	printf("%s will now be sent to the client.\n",filename);
 	
 		// LOOP AND SEND IN BLOCKS
 		while((read = fread(buffer, 1, sendbuffer, file)) > 0){
@@ -450,8 +499,18 @@ void send_file(int socket){
 		
 		// FREE UP ALLOCATED RESOURCES
 		fclose(file);
-		//free(filename);
 		free(path);
+
+		//OUTPUT TO LOG
+		snprintf(tmpmsg,100,"%s has been sent",filename);
+		output_log(tmpmsg);
+
+	} else {
+
+		//OUTPUT TO LOG
+		char tmpmsg[100];
+		snprintf(tmpmsg,100,"%s does not exist",filename);
+		output_log(tmpmsg);
 
 	}
 
@@ -468,10 +527,14 @@ void send_file_list(int socket){
 	// GET THE CURRENT FILE LIST
 	char *filelist = get_file_list();
 
+
 	if(filelist!=NULL){
 
 	// SEND STRING ACROSS TO CLIENT
 	send_string(socket,filelist);
+	
+	// OUTPUT TO LOG
+	output_log("Sending file list");
 
 	} else {
 
@@ -493,16 +556,11 @@ char *get_file_list(){
 	//CREATE STRUCT
 	struct dirent **namelist;
 	int n;
+
+	//OUTPUT TO LOG
+	output_log("Generating file list");
 	
 	if ((n = scandir(dirname, &namelist, NULL, alphasort)) != -1){
-  //      	perror("scandir");
-//		return "";
-//	} else {
-
-	//printf("There are %d files in the dir\n",n);
-
-	// TRY SETTING SPACE FOR 2 CHARS
-	//char *filelist = (char *)malloc(sizeof(char)*2);
 
 	// CREATE A BUFFER TO READ THE FILES INTO
 	size_t memallocation = sizeof(char)*2048;
@@ -532,7 +590,7 @@ char *get_file_list(){
 	//printf("The list:%s\n",filelist);
 	//free(filelist);
 	//return filelist;
-	printf("Sized List:\n%s\n",sized_list);
+	//printf("Sized List:\n%s\n",sized_list);
         free(namelist);         //NB
 	namelist = NULL;
 
@@ -633,7 +691,7 @@ void *client_handler(void *socket_desc)
 	// LOOP UNTIL EXIT CHOICE IS RECEIVED
 	do {
 
-		printf("CONNFD IS: %d\n",connfd);
+		//printf("CONNFD IS: %d\n",connfd);
 	
 		// GET MENU CHOICE AND SET THE CHOICE POINTER
 		get_menu_choice(connfd,menu_choice);
@@ -641,39 +699,39 @@ void *client_handler(void *socket_desc)
 		switch(*menu_choice) {
 
 		case '1':
-			printf("Sending Student Info\n");
+			//printf("Sending Student Info\n");
+			//OUTPUT TO LOG
+			output_log("Sending student info");
 			send_student_info(connfd);
 		break;
 		case '2':
 		{
 			//TODO: MAKE SURE TIME IS FREED
-			printf("Sending the time...\n");
+			output_log("Sending the time");
 			char *time = get_time();
 			send_string(connfd,time);
 			//free(time);
 		break;
 		}
 		case '3':
-			printf("Sending server details\n");
+			output_log("Sending the server details");
 			send_server_details(connfd);
 		break;
 		case '4':
 		{
-			printf("Sending file list...\n");
+			output_log("Sending file list");
 			send_file_list(connfd);
 		break;
 		}
 		case '5':
-			
-			printf("Client want's file\n");
+			output_log("Client is requesting a file");
 			send_file(connfd);
 		break;
-		case '7':
-			printf("The client has sent the string\n");
-			read_string(connfd);
-			send_string(connfd,"Which file would you like?");
+		case '6':
+			output_log("Client is going to shutdown");
 		break;
 		default:
+			output_log("Recieved unknown menu option from client");
 			send_string(connfd,"Sorry, I didn't recognise that option");
 		break;
 	}
@@ -687,7 +745,10 @@ void *client_handler(void *socket_desc)
 	shutdown(connfd, SHUT_RDWR);
 	close(connfd);
 
-	printf("Thread %lu has exited.\n", (unsigned long) pthread_self());
+	//OUTPUT TO LOG THE THREAD EXIT
+	char temp[100];
+	snprintf(temp,100,"Thread %lu has exited.", (unsigned long) pthread_self());
+	output_log(temp);
 
 	// always clean up sockets gracefully
 	shutdown(connfd, SHUT_RDWR);
