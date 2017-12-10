@@ -18,8 +18,8 @@ typedef void (*read_cb)(int socket);
 void send_string(int socket,char* response);
 char *read_string(int socket);
 void send_menu_choice(int socket, char choice, read_cb readfunction);
-
 void close_connection(int);
+
 // DECLARING GLOBAL TO CLOSE CONNECTION GRACEFULLY
 int sockfd;
 
@@ -28,11 +28,11 @@ static void handler(int sig, siginfo_t *siginfo, void *context)
 {
 
 	// DEBUG
-        printf("The signal no was %d\n",sig);
-        printf("PID: %ld, UID: %ld\n",
-        (long) siginfo->si_pid, (long) siginfo->si_uid);
+	//printf("The signal no was %d\n",sig);
+	//printf("PID: %ld, UID: %ld\n",
+	//(long) siginfo->si_pid, (long) siginfo->si_uid);
 
-	// MEANS CONNECTION HAS FAILED
+	// SIGPIPE - MEANS CONNECTION HAS FAILED
 	if(siginfo->si_signo==13){
 	
 		printf("Connection to the server has been lost...\n\nExiting now\n");
@@ -71,7 +71,7 @@ static void handler(int sig, siginfo_t *siginfo, void *context)
 
 // LAUNCH SCREEN FOR DEMO PURPOSES TO SHOW MY DETAILS
 void launch_screen(){
-	
+
 	printf("  _______ _____ _____   _______ _      _____ ______ _   _ _______ \n");
 	printf(" |__   __/ ____|  __ \\ / / ____| |    |_   _|  ____| \\ | |__   __|\n");
 	printf("    | | | |    | |__) / / |    | |      | | | |__  |  \\| |  | |   \n");
@@ -84,46 +84,6 @@ void launch_screen(){
         printf("\t  Email: cconno208@caledonian.ac.uk / chris@chrisconnor.co.uk\n");
         printf("\t GitHub: https://www.github.com/cjconnor24/sp-c-coursework (PRIVATE REPO)\n\n");
         printf("--------------------------------------------------------------------------\n\n");
-
-}
-
-void read_get_file(int socket){
-
-	//TODO: READ WHICH FILE WOULD YOU LIKE
-	size_t payload_length = sizeof(size_t);
-	readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
-
-	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);//DEBUG
-
-	// CALCULATE AND ALLOCATE MEMORY FOR THE RESULT
-	size_t memallocation = (sizeof(char)*payload_length)+1;
-	char *result = (char *)malloc(memallocation);
-
-	if(result!=NULL){
-	
-	// INITIALISE EVERY PART OF MEM - WITHOUT WAS CAUSING VALG ISSUES
-	memset(result,'\0',memallocation);
-	
-	readn(socket, (unsigned char *) result, payload_length);
-
-	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);//DEBUG
-	printf("WE REACH READ GET FILE");
-	// PRINT STRING TO CONSOLE
-	printf("%s\n",result);
-
-//			send_menu_choice(socket, '7',read_string);
-	send_string(socket,"fixed.txt");
-	
-	
-	//TODO: SEND THE FILE
-	//TODO: READ THE RESPONSE
-
-	// FREE UP THE RESULT
-	free(result);
-	result = NULL;
-
-	}
-	
 
 }
 
