@@ -134,22 +134,23 @@ char *read_string(int socket){
 // READ UTSNAME STRUCT FROM SERVER
 struct utsname *read_server_details(int socket){
 
+	// DECLARE THE EXPECTED STRUCT SIZE
 	size_t payload_length = sizeof(struct utsname);
-
 	readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
 
-
+	// ALLOCATE SOME MEMORY TO STORE THE RESULT
 	struct utsname *uts = malloc(sizeof(struct utsname));
 
 	// MAKE SURE THE STRUCT ISN'T NULL BEFORE DOING SOMETHING WITH IT	
 	if(uts!=NULL){
 
+		// READ THE STRUCT AND RETURN THE POINTER
 		readn(socket, (unsigned char *) uts, payload_length);
-
-	return uts;
+		return uts;
 
 	} else {
-
+		
+		// OTHERWISE RETURN NULL
 		return NULL;
 	}
 
@@ -158,7 +159,8 @@ struct utsname *read_server_details(int socket){
 
 // SMALL HELPER FUNCTION TO FORMAT DATA CONSISTENTLY - WILL AIM TO CENTER TEXT IN BOX
 void display_heading(char *message){
-
+	
+	// LOCAL VARIABLES TO WORK OUT CENTER POINT AND PADDING
 	int messagelen = strlen(message);
 	int linelen = 38;
 	int centerpoint = (linelen-messagelen)/2;
@@ -192,20 +194,29 @@ void displaymenu()
 
 // FUNCTION TO BUILD FULL PATHNAME OF REQUESTED FILE
 char *get_full_path(char *filename){
-
+	
+	// BASE DIRECTORY
 	char dirname[] = "./download/";	
 
         // CREATE THE MEMORY
         size_t strsize =(sizeof(char)*(strlen(filename)+strlen(dirname)+1));
         char *full_path = (char *)malloc(strsize);
 
-        // INITIALISE
-        memset(full_path,'\0',strsize);
+	// MAKE SURE FULL_PATH ISNT A NULL POINTER
+	if(full_path!=NULL){
 
-        // WRITE THE PATH
-        snprintf(full_path,strsize,"%s%s",dirname,filename);
+	        // INITIALISE
+	        memset(full_path,'\0',strsize);
+	
+	        // WRITE THE PATH INTO THE ALLOCATED MEMORY
+	        snprintf(full_path,strsize,"%s%s",dirname,filename);	
+	        return full_path;
 
-        return full_path;
+	} else {
+
+		return NULL;
+
+	}
 
 }
 
@@ -213,8 +224,6 @@ char *get_full_path(char *filename){
 char *get_file_name(){
 
 	// DISPLAY INSTRUCTION TO USER
-	//printf("Please enter the name of the file\n");
-	//printf("that you would like to download\n\n");
 	printf("Filename> ");
 
 	// SET ASIDE SOME SPACE FOR THE RESPONSE
@@ -245,7 +254,8 @@ char *get_file_name(){
 	
 	// MAKE SURE ISNT NULL POINTER
 	if(result!=NULL){
-
+		
+		// COPY THE FILENAME INTO THE CORRECTLY ALLOCATED SIZE
 		strcpy(result,filename);
 		return result;
 
@@ -269,14 +279,15 @@ void get_student_info(int socket){
 	// MAKE SURE IT ISN'T NULL
 	if(result!=NULL){
 
-	// DISPLAY AND CLEAR THE MEMORY
-	printf("%s\n",result);
-	free(result);
-	result = NULL;
+		// DISPLAY AND CLEAR THE MEMORY
+		printf("%s\n",result);
+		free(result);
+		result = NULL;
 
 	}
 
 }
+
 // GET TIME FROM SERVER
 void get_server_time(int socket){
 
@@ -290,14 +301,15 @@ void get_server_time(int socket){
 	// MAKE SURE IT ISN'T NULL
 	if(result!=NULL){
 
-	// DISPLAY AND CLEAR THE MEMORY
-	printf("%s\n",result);
-	free(result);
-	result = NULL;
+		// DISPLAY AND CLEAR THE MEMORY
+		printf("%s\n",result);
+		free(result);
+		result = NULL;
 
 	}
 
 }
+
 // GET SERVER INFORMATION
 void get_server_info(int socket){
 
@@ -310,19 +322,18 @@ void get_server_info(int socket){
 	// MAKE SURE IT ISN'T NULL
 	if(result!=NULL){
 
-	// DISPLAY AND CLEAR THE MEMORY
-	//printf("Node name:    %s\n", result->nodename);
-	printf("System name:  %s\n", result->sysname);
-	printf("Release:      %s\n", result->release);
-	printf("Version:      %s\n", result->version);
-	//printf("Machine:      %s\n", result->machine);
-
-	free(result);
-	result = NULL;
+		// DISPLAY AND CLEAR THE MEMORY
+		printf("System name:  %s\n", result->sysname);
+		printf("Release:      %s\n", result->release);
+		printf("Version:      %s\n", result->version);
+	
+		free(result);
+		result = NULL;
 
 	}
 
 }
+
 // GET FILE LIST FROM SERVER
 void get_file_list(int socket){
 
@@ -335,35 +346,14 @@ void get_file_list(int socket){
 	// MAKE SURE IT ISN'T NULL
 	if(result!=NULL){
 
-	// DISPLAY AND CLEAR THE MEMORY
-	printf("%s\n",result);
-	free(result);
-	result = NULL;
+		// DISPLAY AND CLEAR THE MEMORY
+		printf("%s\n",result);
+		free(result);
+		result = NULL;
 
 	}
 }
 
-/*void write_file(char *filename, unsigned char *data){
-
-// OPEN THE NEW FILE
-FILE *fnew = fopen(filename,"wb");
-
-// GET THE SIZE
-int sz = strlen(data);
-
-
-// WRITE THE DATA TO THE BUFFER
-fwrite(data,1,sz,fnew);
-
-//CLOSE THE NEW FILE
-fclose(fnew);
-
-
-// FREE THE HEAP MEME
-//  free(buffer);
-
-
-}*/
 
 // TODO: REFACTOR CODE TO REDUCE NESTED IFS
 // DOWNLOAD FILE FROM SERVER
@@ -400,15 +390,13 @@ void get_file(int socket){
 				// CHECK FILE EXISTS - IF SO GO AHEAD
 				if(sizeint!=-1){
 		
-					//printf("The filesize is %d\n",sizeint); // DEBUG
-				
 					// GET FULL PATH TO DOWNLOAD DIRECTORY	
 					char *fullpath = get_full_path(filename);	
 		
-					// TODO: CHECK IF FILE EXISTS LOCALLY
+					// CHECK IF FILE EXISTS LOCALLY
 					FILE *temp = fopen(fullpath,"r");
 					
-					// FILE EXISTS, LET USER KNOW
+					// FILE EXISTS GET A NEW FILE NAME
 					if(temp){
 	
 						// CLOSE THE FILE	
@@ -484,12 +472,15 @@ void get_file(int socket){
 					fclose(newfile);
 					free(filesize);
 					free(fullpath);
-	
+				
+					// LET USER KNOW FILE DOWNLOADED	
+					display_heading("Download Success");	
 					printf("%s was successfully downloaded.\n\n",filename);
 	
 				} else {
 	
 					// LET USER KNOW, THE FILE DOESNT EXIST
+					display_heading("Invalid File");	
 					printf("Sorry, %s does not exist on the server\n",filename);
 					if(filesize!=NULL){
 						free(filesize);
@@ -499,12 +490,14 @@ void get_file(int socket){
 
 
 			}
+		
+		// FREE UP THE RESOURCES
 		free(result);
 		free(filename);
 
 	}
 	
-	
+	// FURTHER FREE UP RESOURCES	
 	if(result!=NULL){
 	free(result);
 	result=NULL;
@@ -512,11 +505,19 @@ void get_file(int socket){
 
 }
 
+// CLOSE THE CURRENT CONNECTION
 void close_connection(int socket){
 
+	// TELL SERVER WE'RE GOING TO QUIT
 	send_string(socket,"6");
+
+	// GET REPONSE FROM SERVER
 	char *response = read_string(socket);
+
+	display_heading("Client Shutdown");
 	printf("Exiting now...\n");
+
+	// FREE UP THE RESOURCES
 	free(response);
 
 }
@@ -528,7 +529,7 @@ int main(void)
 	// LAUNCH SCREEN FOR DEMO
 	launch_screen();
 
-        //TODO: SIGNAL HANDLER
+        // SIGNAL HANDLER
         struct sigaction act;
         memset(&act, '\0', sizeof(act));
 
@@ -537,104 +538,104 @@ int main(void)
         // the SA_SIGINFO flag tells sigaction() to use the sa_sigaction field, not sa_handler
         act.sa_flags = SA_SIGINFO;
 
-        // DEBUG
-	//printf("Sig Handler Assigned\n");
-
         // HANDLE SIGPIPE
         if (sigaction(SIGPIPE, &act, NULL) == -1) {
                 perror("sigaction");
                 exit(EXIT_FAILURE);
         }
 
-	// HAND SIGINT
+	// HANDLE SIGINT
         if (sigaction(SIGINT, &act, NULL) == -1) {
                 perror("sigaction");
                 exit(EXIT_FAILURE);
         }
 
-    // *** this code down to the next "// ***" does not need to be changed except the port number
+	// SETUP THE SOCKETS
 	sockfd = 0;
 	struct sockaddr_in serv_addr;
 
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-	perror("Error - could not create socket");
-	exit(EXIT_FAILURE);
-    }
-
-    serv_addr.sin_family = AF_INET;
-
-    // IP address and port of server we want to connect to
-    serv_addr.sin_port = htons(50031);
-    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-    // try to connect...
-    if (connect(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) == -1)  {
-	perror("Error - connect failed");
-	exit(1);
-    } else
-       printf("Successfully connected to server...\n\n");
-
-
-	char input;
-	char name[10];
-
-	displaymenu();
-
-	do {
-
-		// GET OPTION FROM USER
-		printf("Enter your choice> ");
-		fgets(name, INPUTSIZ, stdin);	
-		name[strcspn(name, "\n")] = 0;
-		input = name[0];
-
-		// ENSURE ONLY 1 CHARACTER LONG
-		if (strlen(name) > 1)
-			input = 'x';	
-
-		switch (input) {
-		case '0':
-		    displaymenu();
-		    break;
-		case '1':
-			display_heading("Student Information");
-			get_student_info(sockfd);
-			//send_menu_choice(sockfd, '1',read_string);
-			break;
-		case '2':
-			display_heading("Server Timestamp");
-			get_server_time(sockfd);
-			//send_menu_choice(sockfd, '2',read_string);
-			break;
-		case '3':
-			display_heading("Server Information");
-			get_server_info(sockfd);
-			//send_menu_choice(sockfd, '3',read_server_details);
-			break;
-		case '4':
-			display_heading("Server File List");
-			get_file_list(sockfd);
-			//send_menu_choice(sockfd, '4',read_string);
-			break;
-		case '5':
-			//send_menu_choice(sockfd,'5',read_get_file);
-			//get_file_name();
-			//printf("Retrieve file list\n");
-			//display_heading("Server File List");
-			//send_menu_choice(sockfd, '4',read_string);
-			display_heading("Download File");
-			get_file(sockfd);
-			break;
-		case '6':
-			close_connection(sockfd);
-			break;
-		default:
-			// INVALID OPTION
-			printf("\nSorry, that was an invalid choice. Press [0] to display the menu.\n\n");
-		    break;
+	// SOCKET FAILED
+	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+		perror("Error - could not create socket");
+		exit(EXIT_FAILURE);
 	}
 
-	} while (input != '6');
+
+	// THE IP ADDRESS AND PORT OF THE SERVER TO CONNECT TO
+	serv_addr.sin_family = AF_INET;
+	serv_addr.sin_port = htons(50031);
+	serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+	// TRY AND CONNECT TO THE SERVER
+	if (connect(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) == -1)  {
+
+		display_heading("ERROR");
+		perror("Error - connect failed");
+		exit(EXIT_FAILURE);
+
+	} else {
+
+		printf("Successfully connected to server...\n\n");
+
+		char input;
+		char name[10];
+		
+		displaymenu();
+
+		do {
+
+			// GET OPTION FROM USER
+			printf("Enter your choice> ");
+			fgets(name, INPUTSIZ, stdin);	
+			name[strcspn(name, "\n")] = 0;
+			input = name[0];
+
+			// ENSURE ONLY 1 CHARACTER LONG
+			if (strlen(name) > 1)
+				input = 'x';	
+
+			switch (input) {
+				case '0':
+					// RE-DISPLAY THE MENU
+				 	displaymenu();
+				break;
+				case '1':
+					// GET STUDENT INFO
+					display_heading("Student Information");
+					get_student_info(sockfd);
+				break;
+				case '2':
+					// GET SERVER TIME
+					display_heading("Server Timestamp");
+					get_server_time(sockfd);
+				break;
+				case '3':
+					// GET SERVER INFO
+					display_heading("Server Information");
+					get_server_info(sockfd);
+				break;
+				case '4':
+					// GET FILE LIST FROM SERVER
+					display_heading("Server File List");
+					get_file_list(sockfd);
+				break;
+				case '5':
+					// DOWNLOAD FILE FROM SERVER
+					display_heading("Download File");
+					get_file(sockfd);
+				break;
+				case '6':
+					// SHUTDOWN GRACEFULLY
+					close_connection(sockfd);
+				break;
+				default:
+					// INVALID OPTION
+					display_heading("Option Unknown");
+					printf("\nSorry, that was an invalid choice. Press [0] to display the menu.\n\n");
+				break;
+			}
+
+		} while (input != '6'); // EXIT WHEN USER CHOOSES QUIT
 
 
 	//TRY AND GRACEFULLY CLOSE SOCKETS AND EXIT
@@ -644,7 +645,10 @@ int main(void)
 		exit(EXIT_FAILURE);
 
 	}
-
+	
+	// CLOSE PROGRAM
 	exit(EXIT_SUCCESS);
 
-} // end main()
+	}
+
+}
