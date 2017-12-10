@@ -50,6 +50,8 @@ char dirname[] = "./upload/";	// DIRECTORY NAME
 // SIGNAL HANDLER
 static void handler(int sig, siginfo_t *siginfo, void *context)
 {
+
+	// DEBUGGING INFO
 	printf("The signal no was %d\n",sig);
 	printf("PID: %ld, UID: %ld\n",
 	(long) siginfo->si_pid, (long) siginfo->si_uid);
@@ -60,7 +62,9 @@ static void handler(int sig, siginfo_t *siginfo, void *context)
 	//uptime(start_timer,end_time);
 	printf("Server will shut down...Error %d\n",siginfo->si_signo);
 
-	printf("Total execution time = %f seconds\n",(double)(end_time.tv_usec - start_time.tv_usec) / 1000000 + (double)(end_time.tv_sec - start_time.tv_sec));
+	printf("----------------------------------\n");
+	printf("TOTAL UPTIME: %f SECONDS\n",(double)(end_time.tv_usec - start_time.tv_usec) / 1000000 + (double)(end_time.tv_sec - start_time.tv_sec));
+	printf("----------------------------------\n");
 
 	// HANDLE SIGPIPE	
 	if(siginfo->si_signo==13){
@@ -96,7 +100,7 @@ static void handler(int sig, siginfo_t *siginfo, void *context)
 		}
 
 
-		printf("Server will shutdown in...\n");
+		printf("\nServer will shutdown in...\n\n");
 
 		int i;
 		for(i = 3; i > 0; i--){
@@ -395,8 +399,11 @@ int file_exists(char *filename){
 	return result;
 
 }
+
+// GET A FILE NAME FROM THE CLIENT AND SEND THE FILE ACCROSS FOR DOWNLOAD
 void send_file(int socket){
 
+	// SIMPLE HANDSHAKE TO START PROCESS
 	send_string(connfd,"Which file would you like?");
 
 	// GET FILENAME FROM CLIENT
@@ -418,15 +425,12 @@ void send_file(int socket){
 			
 		// GET THE FULL PATH AND OPEN TO READ
 		char *path = get_full_path(filename);			
-	
-		// OPEN THE FILE TO SEND
 		FILE *file = fopen(path,"rb");
-		//FILE *newfile = fopen(filename,"wb");
-	
-		//unsigned char *buffer = (unsigned char*)malloc(sizeof(BUFSIZ));
-		char buffer[30];
-		int read = 0;
+
+		// SETUP SOME BUFFERS AND LOCAL VARS FOR SENDING	
 		int sendbuffer = 30;
+		char buffer[sendbuffer];
+		int read = 0;
 				
 		// LOG TO CONSOLE FILE SEND WILL BEING
 		printf("%s will now be sent to the client.\n",filename);
@@ -443,7 +447,8 @@ void send_file(int socket){
 			// DECREASE REMAINING DATA LEFT TO SEND
 			filesize = filesize - writebuffer;
 		}
-
+		
+		// FREE UP ALLOCATED RESOURCES
 		fclose(file);
 		free(filename);
 
