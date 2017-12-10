@@ -458,13 +458,14 @@ void get_file(int socket){
 		// MAKE SURE IT ISN'T NULL
 		if(filename!=NULL){
 
-			// SEND THAT ACCROSS TO THE SERVER
+			// SEND FILE NAME TO SERVER
 			send_string(socket,filename);
 			
-			// CHECK IF EXISTS
+			// CHECK IF EXISTS AND GET THE SIZE - (-1) MEANS DOESNT EXIST
 			char *filesize = read_string(socket);
-			int sizeint = atoi(filesize);	
-			printf("The filesize is %d\n",sizeint);
+			int sizeint = atoi(filesize);
+	
+			printf("The filesize is %d\n",sizeint); // DEBUG
 
 			FILE *newfile = fopen(filename,"wb");
 			int read = 0;
@@ -479,7 +480,7 @@ void get_file(int socket){
 			
 				// SET ASIDE SOME SPACE TO STORE THE CURRENT BLOCK	
 				unsigned char *temp = (unsigned char *)malloc(writebuffer);
-				readn(socket, (unsigned char *)temp, sendbuffer);
+				readn(socket, (unsigned char *)temp, writebuffer);
 				
 				// WRITE THE CURRENT BLOCK TO THE FILE
 				fwrite(temp,1,writebuffer,newfile);
