@@ -586,7 +586,10 @@ void get_file(int socket){
 				} else {
 	
 					// LET USER KNOW, THE FILE DOESNT EXIST
-					printf("Sorry, %s does not exist on the server\n",filename);			
+					printf("Sorry, %s does not exist on the server\n",filename);
+					if(filesize!=NULL){
+						free(filesize);
+					}	
 	
 				}
 
