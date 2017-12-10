@@ -69,6 +69,24 @@ static void handler(int sig, siginfo_t *siginfo, void *context)
 
 }
 
+// LAUNCH SCREEN FOR DEMO PURPOSES TO SHOW MY DETAILS
+void launch_screen(){
+	
+	printf("  _______ _____ _____   _______ _      _____ ______ _   _ _______ \n");
+	printf(" |__   __/ ____|  __ \\ / / ____| |    |_   _|  ____| \\ | |__   __|\n");
+	printf("    | | | |    | |__) / / |    | |      | | | |__  |  \\| |  | |   \n");
+	printf("    | | | |    |  ___/ /| |    | |      | | |  __| | . ` |  | |   \n");
+	printf("    | | | |____| |  / / | |____| |____ _| |_| |____| |\\  |  | |   \n");
+	printf("    |_|  \\_____|_| /_/   \\_____|______|_____|______|_| \\_|  |_|   \n");
+        printf("--------------------------------------------------------------------------\n\n");
+        printf("\tStudent: Chris Connor\n");
+        printf("\t    SID: S1715477\n");
+        printf("\t  Email: cconno208@caledonian.ac.uk / chris@chrisconnor.co.uk\n");
+        printf("\t GitHub: https://www.github.com/cjconnor24/sp-c-coursework (PRIVATE REPO)\n\n");
+        printf("--------------------------------------------------------------------------\n\n");
+
+}
+
 void read_get_file(int socket){
 
 	//TODO: READ WHICH FILE WOULD YOU LIKE
@@ -209,11 +227,11 @@ struct utsname *read_server_details(int socket){
 
 		readn(socket, (unsigned char *) uts, payload_length);
 
-		printf("Node name:    %s\n", uts->nodename);
+		//printf("Node name:    %s\n", uts->nodename);
 		printf("System name:  %s\n", uts->sysname);
 		printf("Release:      %s\n", uts->release);
 		printf("Version:      %s\n", uts->version);
-		printf("Machine:      %s\n", uts->machine);
+		//printf("Machine:      %s\n", uts->machine);
 	
 //	printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);//DEBUG
 
@@ -228,23 +246,6 @@ struct utsname *read_server_details(int socket){
 	}
 
 }
-
-// SEND USERS MENU CHOICE ACROSS TO SERVER AND HANDLE THE RESPONSE
-/*void send_menu_choice(int socket, char choice, read_cb readfunction){
-
-	size_t payload_length = sizeof(char);
-
-	//printf("payload_length is: %zu (%zu bytes)\n", payload_length, payload_length);
-
-	    // SEND THE VALUE OF INT
-	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));	
-	writen(socket, (unsigned char *) &choice, payload_length);
-
-	// CALLBACK DEPENDING ON DATA
-	char *response = readfunction(socket);
-	free(response);
-
-}*/
 
 
 //TODO: REMOVE
@@ -265,16 +266,13 @@ void get_hello(int socket)
 void displaymenu()
 {
     
-	printf("-------------------\n");
-	printf("   MAIN MENU\n");
-	printf("-------------------\n");
 	printf("[0]\tRe-display menu\n");
 	printf("[1]\tGet Student Information \n");
 	printf("[2]\tGet server timestamp\n");
 	printf("[3]\tGet server information\n");
 	printf("[4]\tGet server file list\n");
 	printf("[5]\tGet a file from the server\n");
-	printf("[6]\tExit\n");
+	printf("[6]\tExit\n\n");
 	printf("-------------------\n");
 
 }
@@ -496,7 +494,7 @@ void get_file(int socket){
 				// CHECK FILE EXISTS - IF SO GO AHEAD
 				if(sizeint!=-1){
 		
-					printf("The filesize is %d\n",sizeint); // DEBUG
+					//printf("The filesize is %d\n",sizeint); // DEBUG
 				
 					// GET FULL PATH TO DOWNLOAD DIRECTORY	
 					char *fullpath = get_full_path(filename);	
@@ -621,6 +619,9 @@ void close_connection(int socket){
 int main(void)
 {
 
+	// LAUNCH SCREEN FOR DEMO
+	launch_screen();
+
         //TODO: SIGNAL HANDLER
         struct sigaction act;
         memset(&act, '\0', sizeof(act));
@@ -631,7 +632,7 @@ int main(void)
         act.sa_flags = SA_SIGINFO;
 
         // DEBUG
-        printf("Sig Handler Assigned\n");
+	//printf("Sig Handler Assigned\n");
 
         // HANDLE SIGPIPE
         if (sigaction(SIGPIPE, &act, NULL) == -1) {
@@ -665,32 +666,25 @@ int main(void)
 	perror("Error - connect failed");
 	exit(1);
     } else
-       printf("Connected to server...\n");
-
-    // ***
-    // your own application code will go here and replace what is below... 
-    // i.e. your menu etc.
+       printf("Successfully connected to server...\n\n");
 
 
-    // get a string from the server
-    get_hello(sockfd);
+	char input;
+	char name[10];
 
-char input;
-    char name[10];
-
-    displaymenu();
+	displaymenu();
 
 	do {
 
 		// GET OPTION FROM USER
-		printf("option> ");
+		printf("Enter your choice> ");
 		fgets(name, INPUTSIZ, stdin);	
 		name[strcspn(name, "\n")] = 0;
 		input = name[0];
 
 		// ENSURE ONLY 1 CHARACTER LONG
 		if (strlen(name) > 1)
-		input = 'x';	
+			input = 'x';	
 
 		switch (input) {
 		case '0':
@@ -728,8 +722,8 @@ char input;
 			close_connection(sockfd);
 			break;
 		default:
-			printf("Invalid choice - 0 displays options...!\n");
-			displaymenu();
+			// INVALID OPTION
+			printf("\nSorry, that was an invalid choice. Press [0] to display the menu.\n\n");
 		    break;
 	}
 
