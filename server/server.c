@@ -24,7 +24,6 @@
 
 // thread function
 void *client_handler(void *);
-
 void send_hello(int);
 char *get_ip_address();
 void send_string(int socket, char *response);
@@ -44,7 +43,7 @@ void output_log(char *);
 struct timeval start_time, end_time; // START AND END TIME FOR EXECUTION TIME
 int connfd;			// CONNECTION TO CLOSE IN SIGHANDLER
 int listenfd;			// LISTENER TO CLOSE IN SIGHANDLER
-pthread_t sniffer_thread;	// SNIFFER THREAD WHICH WILL WAIT FOR PTHREAD_JOIN IN SIGHANDLER
+//pthread_t sniffer_thread;	// SNIFFER THREAD WHICH WILL WAIT FOR PTHREAD_JOIN IN SIGHANDLER
 
 // CHANGE THIS FOR UPLOAD DIRECTORY TO SEARCH FILES
 char dirname[] = "./upload/";	// DIRECTORY NAME
@@ -59,7 +58,7 @@ static void handler(int sig, siginfo_t *siginfo, void *context)
 	//(long) siginfo->si_pid, (long) siginfo->si_uid);
 
 	// WAIT ON ALL THREADS ENDING BEFORE CLOSE
-	pthread_join(sniffer_thread,NULL);
+	//pthread_join(sniffer_thread,NULL);
 	set_timer(&end_time);
 
 	//printf("Server will shut down...Error %d\n",siginfo->si_signo);
@@ -107,10 +106,8 @@ static void handler(int sig, siginfo_t *siginfo, void *context)
 			//perror("No listener was active");
 		}
 
-		// OUTPUT MESSAGE THEN SHUTDOWN IN 3 SECONDS
-		output_log("[!WARNING!] Server is going to shutdown in 3 seconds...");
-		sleep(3);
-
+		// OUTPUT MESSAGE THEN SHUTDOWN
+		output_log("[!WARNING!] Server is going to shutdown.");
 		exit(EXIT_SUCCESS);
 
 	}
@@ -183,7 +180,7 @@ int main(void)
 	act.sa_flags = SA_SIGINFO;
 
 	// DEBUG
-	output_log("Sig Handler Assigned");
+	//output_log("Sig Handler Assigned");
 
         // HANDLE SIGPIPE
 	/*if (sigaction(SIGPIPE, &act, NULL) == -1) {
@@ -254,7 +251,7 @@ while (1) {
 	snprintf(tmpmsg,100,"Client connection from %s",inet_ntoa(client_addr.sin_addr));
 	output_log(tmpmsg);
 
-
+	pthread_t sniffer_thread;
 	//client_handler(&connfd);
         // third parameter is a pointer to the thread function, fourth is its actual parameter
 	if (pthread_create(&sniffer_thread, NULL, client_handler,(void *) &connfd) < 0) {
@@ -270,7 +267,7 @@ while (1) {
 	// THIS NEED TO BE INSIDE A HANDLER FOR SIGNAL
 	//set_timer(&end_time);
 
-	//pthread_join( sniffer_thread , NULL);
+	pthread_join( sniffer_thread , NULL);
 
     }
 
