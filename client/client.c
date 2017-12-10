@@ -15,11 +15,14 @@
 
 // CREATING TO ALLOW CALLBACK - ENDED UP CHANGING
 typedef void (*read_cb)(int socket);
+
+// FUNCTION PROTOTYPES
 void send_string(int socket,char* response);
 char *read_string(int socket);
 void send_menu_choice(int socket, char choice, read_cb readfunction);
 void close_connection(int);
 
+// GLOBAL VARS
 // DECLARING GLOBAL TO CLOSE CONNECTION GRACEFULLY
 int sockfd;
 
