@@ -217,27 +217,14 @@ struct utsname *read_server_details(int socket){
 
 	readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
 
-	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);//DEBUG
 
 	struct utsname *uts = malloc(sizeof(struct utsname));
-//	payload_length = sizeof(struct utsname);
 
 	// MAKE SURE THE STRUCT ISN'T NULL BEFORE DOING SOMETHING WITH IT	
 	if(uts!=NULL){
 
 		readn(socket, (unsigned char *) uts, payload_length);
 
-		//printf("Node name:    %s\n", uts->nodename);
-		printf("System name:  %s\n", uts->sysname);
-		printf("Release:      %s\n", uts->release);
-		printf("Version:      %s\n", uts->version);
-		//printf("Machine:      %s\n", uts->machine);
-	
-//	printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);//DEBUG
-
-		//FREE UP THE STRUCT
-	//	free(uts);
-	//	uts = NULL;
 	return uts;
 
 	} else {
@@ -247,33 +234,23 @@ struct utsname *read_server_details(int socket){
 
 }
 
-
-//TODO: REMOVE
-// how to receive a string
-void get_hello(int socket)
-{
-    char hello_string[32];
-    size_t k;
-
-    readn(socket, (unsigned char *) &k, sizeof(size_t));	
-    readn(socket, (unsigned char *) hello_string, k);
-
-    printf("Hello String: %s\n", hello_string);
-    printf("Received: %zu bytes\n\n", k);
-} // end get_hello()
-
 // DISPLAY MENU OPTIONS TO USER
 void displaymenu()
 {
     
-	printf("[0]\tRe-display menu\n");
-	printf("[1]\tGet Student Information \n");
-	printf("[2]\tGet server timestamp\n");
-	printf("[3]\tGet server information\n");
-	printf("[4]\tGet server file list\n");
-	printf("[5]\tGet a file from the server\n");
-	printf("[6]\tExit\n\n");
-	printf("-------------------\n");
+	printf("+-----------------------------------+\n");
+	printf("|      MENU                         |\n");
+	printf("+-----------------------------------+\n");
+	printf("|  [0]\tRe-display menu             |\n");
+	printf("+-----------------------------------+\n");
+	printf("|  [1]\tGet Student Information     |\n");
+	printf("|  [2]\tGet server timestamp        |\n");
+	printf("|  [3]\tGet server information      |\n");
+	printf("|  [4]\tGet server file list        |\n");
+	printf("|  [5]\tGet a file from the server  |\n");
+	printf("+-----------------------------------+\n");
+	printf("|  [6]\tExit                        |\n");
+	printf("+-----------------------------------+\n\n");
 
 }
 
@@ -405,11 +382,11 @@ void get_server_info(int socket){
 	if(result!=NULL){
 
 	// DISPLAY AND CLEAR THE MEMORY
-	printf("Node name:    %s\n", result->nodename);
+	//printf("Node name:    %s\n", result->nodename);
 	printf("System name:  %s\n", result->sysname);
 	printf("Release:      %s\n", result->release);
 	printf("Version:      %s\n", result->version);
-	printf("Machine:      %s\n", result->machine);
+	//printf("Machine:      %s\n", result->machine);
 
 	free(result);
 	result = NULL;
