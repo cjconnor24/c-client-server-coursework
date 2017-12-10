@@ -655,52 +655,50 @@ void *client_handler(void *socket_desc)
 			
 			printf("Client want's file\n");
 			send_string(connfd,"Which file would you like?");
+
+			// GET FILENAME FROM CLIENT
 			char *filename = read_string(connfd);
 
 			printf("The client requested: %s\n",filename);
 
-			//char response[255];
-			//memset(response,'\0',255);
+			// CHECK IF THE FILE EXISTS
 			int filesize = file_exists(filename);
 			printf("The filesize is %d\n",filesize);
 
-			//if(filesize!=-1){
-
+			// SET ASIDE SPACE FOR FILESIZE AND SEND AS A STRING
 			char sizestr[20];
 			snprintf(sizestr,20,"%d",filesize);
 			send_string(connfd,sizestr);
+			
 
+			// GET THE FULL PATH AND OPEN TO READ
 			char *path = get_full_path(filename);			
 
 			// OPEN THE FILE TO SEND
 			FILE *file = fopen(path,"rb");
-			FILE *newfile = fopen(filename,"wb");
+			//FILE *newfile = fopen(filename,"wb");
 
 			//unsigned char *buffer = (unsigned char*)malloc(sizeof(BUFSIZ));
 			char buffer[30];
 			int read = 0;
-			int temp = 0;
-			char strtemp[15];
 			int sendbuffer = 30;
+			
+			// LOG TO CONSOLE FILE SEND WILL BEING
+			printf("%s will now be sent to the client.\n",filename);
+
 			// LOOP AND SEND IN BLOCKS
 			while((read = fread(buffer, 1, sendbuffer, file)) > 0){
-			//printf("LOOP RUNNING ON SERVER\n");
-			//writen(connfd, (unsigned char *)buffer, sendbuffer);
-			//readn(connfd,NULL,2);
-			snprintf(strtemp,15,"%d",temp);
-			printf("The strtemp is %s\n",strtemp);
-			//send_string(connfd,buffer);
-			writen(connfd,(unsigned char *)buffer,sendbuffer);
-			fwrite(buffer,1, sendbuffer,newfile);
-			//send_data(connfd,&buffer);
-			temp++;
-	//size_t payload_length = size;
 
-	//writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
+				// CREATE A WRITE BUFFER SO AS NOT TO WRITE TOO MUCH DATA
+				int writebuffer = (filesize < sendbuffer ? filesize : sendbuffer);
+				
+				// SEND ACROSS THE DATA
+				writen(connfd,(unsigned char *)buffer,writebuffer);
+				
+				// DECREASE REMAINING DATA LEFT TO SEND
+				filesize = filesize - writebuffer;
 
 			}
-			//free(buffer);
-			fclose(newfile);
 			fclose(file);
 			free(filename);
 		break;
