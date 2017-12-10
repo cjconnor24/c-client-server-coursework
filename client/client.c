@@ -104,35 +104,24 @@ void send_string(int socket, char *response){
 
 }
 
-// READ STRING FROM SERVE
+// READ A STRING FROM SERVER - REUSABLE FOR REGULAR READ ACTIVITY FROM SERVER
 char *read_string(int socket){
 
+	// GET THE INITIAL LENGTH OF EXPECTED STRING
 	size_t payload_length = sizeof(size_t);
 	readn(socket, (unsigned char *) &payload_length, sizeof(size_t));	   
-
-	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);//DEBUG
 
 	// CALCULATE AND ALLOCATE MEMORY FOR THE RESULT
 	size_t memallocation = (sizeof(char)*payload_length)+1;
 	char *result = (char *)malloc(memallocation);
 
+	// MAKE SURE RESULT ISNT NULL POINTER
 	if(result!=NULL){
 	
-	// INITIALISE EVERY PART OF MEM - WITHOUT WAS CAUSING VALG ISSUES
-	memset(result,'\0',memallocation);
-	
-	readn(socket, (unsigned char *) result, payload_length);
-
-	//printf("PAYLOAD: %zu %zu//EOL\n",payload_length,n);//DEBUG
-
-	// PRINT STRING TO CONSOLE
-	//printf("%s\n",result);
-
-	return result;
-
-	// FREE UP THE RESULT
-	//free(result);
-	//result = NULL;
+		// INITIALISE EVERY PART OF MEM - WITHOUT WAS CAUSING VALG ISSUES
+		memset(result,'\0',memallocation);
+		readn(socket, (unsigned char *) result, payload_length);
+		return result;
 
 	} else {
 
@@ -142,34 +131,6 @@ char *read_string(int socket){
 
 }
 
-unsigned char *read_data(int socket){
-
-
-	// CALCULATE AND ALLOCATE MEMORY FOR THE RESULT
-	size_t memallocation = BUFSIZ;
-	unsigned char *result = (unsigned char *)malloc(memallocation);
-
-	if(result!=NULL){
-	
-	// INITIALISE EVERY PART OF MEM - WITHOUT WAS CAUSING VALG ISSUES
-	memset(result,'\0',memallocation);
-	
-	readn(socket, (unsigned char *) result, BUFSIZ);
-
-
-	return result;
-
-	// FREE UP THE RESULT
-	//free(result);
-	//result = NULL;
-
-	} else {
-
-		return NULL;	
-
-	}
-
-}
 // READ UTSNAME STRUCT FROM SERVER
 struct utsname *read_server_details(int socket){
 
