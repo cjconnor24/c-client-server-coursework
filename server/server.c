@@ -32,6 +32,7 @@ void stat_file(char *file);
 char *get_file_list();
 char *build_list(char *old, char *new);
 void set_timer(struct timeval *timer);
+char *read_string(int);
 //void uptime(struct timeval *start_time, struct timeval *end_time);
 
 
@@ -120,13 +121,6 @@ void set_timer(struct timeval *timer){
 }
 
 
-// DISPLAY UPTIME OF SERVER
-//void uptime(struct timeval *start_time, struct timeval *end_time){
-
-//	printf("Total execution time = %f seconds\n",(double)(end_time->tv_usec - start_time->tv_usec) / 1000000 + (double)(end_time->tv_sec - start_time->tv_sec));
-//}
-
-// you shouldn't need to change ain() in the server except the port number
 int main(void)
 {
 
@@ -302,16 +296,6 @@ void send_string(int socket, char *response){
 
 }
 
-// SEND DATA - i.e. UNSIGNED CHAR
-/*void send_data(int socket, unsigned char *response){
-
-	size_t payload_length = size;
-
-	writen(socket, (unsigned char *) &payload_length, sizeof(size_t));
-	writen(socket, (unsigned char *)response, payload_length);
-
-}*/
-
 // GET THE CLIENT IP ADDRESS
 char *get_ip_address(){
 
@@ -411,42 +395,59 @@ int file_exists(char *filename){
 	return result;
 
 }
+void send_file(int socket){
 
-unsigned char *get_file_string(int sockfd, char *filename){
+	send_string(connfd,"Which file would you like?");
 
-	char *full_path = get_full_path(filename);
+	// GET FILENAME FROM CLIENT
+	char *filename = read_string(socket);
 
-        // ORIGINAL FILE
-   FILE *forig;
-   forig = fopen(full_path, "rb");
+	printf("The client requested: %s\n",filename);
 
-// OPEN THE NEW FILE
-fseek(forig, 0L, SEEK_END);
+	// CHECK IF THE FILE EXISTS
+	int filesize = file_exists(filename);
+	printf("The filesize is %d\n",filesize);
 
-// GET THE SIZE
-int sz = ftell(forig);
+	// SET ASIDE SPACE FOR FILESIZE AND SEND AS A STRING
+	char sizestr[20];
+	snprintf(sizestr,20,"%d",filesize);
+	send_string(connfd,sizestr);
 
-printf("The size of the file is %d bytes\n",sz);
+	// IF FILE EXISTS - GO AHEAD
+	if(filesize!=-1){
+			
+		// GET THE FULL PATH AND OPEN TO READ
+		char *path = get_full_path(filename);			
+	
+		// OPEN THE FILE TO SEND
+		FILE *file = fopen(path,"rb");
+		//FILE *newfile = fopen(filename,"wb");
+	
+		//unsigned char *buffer = (unsigned char*)malloc(sizeof(BUFSIZ));
+		char buffer[30];
+		int read = 0;
+		int sendbuffer = 30;
+				
+		// LOG TO CONSOLE FILE SEND WILL BEING
+		printf("%s will now be sent to the client.\n",filename);
+	
+		// LOOP AND SEND IN BLOCKS
+		while((read = fread(buffer, 1, sendbuffer, file)) > 0){
+	
+			// CREATE A WRITE BUFFER SO AS NOT TO WRITE TOO MUCH DATA
+			int writebuffer = (filesize < sendbuffer ? filesize : sendbuffer);
+			
+			// SEND ACROSS THE DATA
+			writen(socket,(unsigned char *)buffer,writebuffer);
+			
+			// DECREASE REMAINING DATA LEFT TO SEND
+			filesize = filesize - writebuffer;
+		}
 
-// CREATE CORRECT SIZE SPACE
-unsigned char *buffer = (unsigned char *)malloc(sizeof(char)*sz);
+		fclose(file);
+		free(filename);
 
-        // GO TO START OF FILE
-        fseek(forig, 0, SEEK_SET);
-
-        // READ THE DATA
-        fread(buffer, sz, 1, forig);
-
-// SEND THE DATA
-//send_data(sockfd,sz,buffer);
-
-        // CLOSE THE OLD FILE
-   fclose(forig);
-
-
-// FREE THE HEAP MEME
-//  free(buffer);
-	return buffer;
+	}
 
 }
 
@@ -654,53 +655,7 @@ void *client_handler(void *socket_desc)
 		case '5':
 			
 			printf("Client want's file\n");
-			send_string(connfd,"Which file would you like?");
-
-			// GET FILENAME FROM CLIENT
-			char *filename = read_string(connfd);
-
-			printf("The client requested: %s\n",filename);
-
-			// CHECK IF THE FILE EXISTS
-			int filesize = file_exists(filename);
-			printf("The filesize is %d\n",filesize);
-
-			// SET ASIDE SPACE FOR FILESIZE AND SEND AS A STRING
-			char sizestr[20];
-			snprintf(sizestr,20,"%d",filesize);
-			send_string(connfd,sizestr);
-			
-
-			// GET THE FULL PATH AND OPEN TO READ
-			char *path = get_full_path(filename);			
-
-			// OPEN THE FILE TO SEND
-			FILE *file = fopen(path,"rb");
-			//FILE *newfile = fopen(filename,"wb");
-
-			//unsigned char *buffer = (unsigned char*)malloc(sizeof(BUFSIZ));
-			char buffer[30];
-			int read = 0;
-			int sendbuffer = 30;
-			
-			// LOG TO CONSOLE FILE SEND WILL BEING
-			printf("%s will now be sent to the client.\n",filename);
-
-			// LOOP AND SEND IN BLOCKS
-			while((read = fread(buffer, 1, sendbuffer, file)) > 0){
-
-				// CREATE A WRITE BUFFER SO AS NOT TO WRITE TOO MUCH DATA
-				int writebuffer = (filesize < sendbuffer ? filesize : sendbuffer);
-				
-				// SEND ACROSS THE DATA
-				writen(connfd,(unsigned char *)buffer,writebuffer);
-				
-				// DECREASE REMAINING DATA LEFT TO SEND
-				filesize = filesize - writebuffer;
-
-			}
-			fclose(file);
-			free(filename);
+			send_file(connfd);
 		break;
 		case '7':
 			printf("The client has sent the string\n");
