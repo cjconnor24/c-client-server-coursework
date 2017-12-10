@@ -467,9 +467,12 @@ void get_file(int socket){
 	
 			printf("The filesize is %d\n",sizeint); // DEBUG
 
-			FILE *newfile = fopen(filename,"wb");
-			int read = 0;
+			// TODO: CHECK IF FILE EXISTS LOCALLY
 
+			// OPEN THE NEW FILE TO WRITE ON CLIENT SIDE
+			FILE *newfile = fopen(filename,"wb");
+			
+			// BLOCK SIZE TO RECEIVE
 			int sendbuffer = 30;			
 			
 			// LOOP UNTIL WHOLE FILE HAS BEEN RECEIVED
