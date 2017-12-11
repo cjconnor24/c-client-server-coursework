@@ -43,6 +43,7 @@ struct timeval start_time, end_time;	// START AND END TIME FOR EXECUTION TIME
 int connfd;				// CONNECTION TO CLOSE IN SIGHANDLER
 int listenfd;				// LISTENER TO CLOSE IN SIGHANDLER
 //pthread_t sniffer_thread;		// SNIFFER THREAD WHICH WILL WAIT FOR PTHREAD_JOIN IN SIGHANDLER
+pthread_mutex_t download_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // CHANGE THIS FOR UPLOAD DIRECTORY TO SEARCH FILES
 char dirname[] = "./upload/";	// DIRECTORY NAME
@@ -424,6 +425,9 @@ int file_exists(char *filename){
 
 // GET A FILE NAME FROM THE CLIENT AND SEND THE FILE ACCROSS FOR DOWNLOAD
 void send_file(int socket){
+	
+	// LOCK THIS FUNCTION SO THAT ONLY ONE CAN FUNCTION
+	pthread_mutex_lock( &download_mutex );
 
 	// SIMPLE HANDSHAKE TO START PROCESS
 	send_string(connfd,"Which file would you like to download?");
@@ -495,6 +499,7 @@ void send_file(int socket){
 		free(filename);
 	}
 
+	pthread_mutex_unlock( &download_mutex );
 }
 
 // SEND THE SERVER FILE LIST BACK TO CLIENT
@@ -611,6 +616,11 @@ void get_menu_choice(int socket, char *choice){
 	// READ PAYLOAD AND DATA FROM CLIENT
 	readn(socket, (unsigned char *) &payload_length, sizeof(size_t));
 	readn(socket, (unsigned char *) choice, payload_length);
+
+	//DEBUG
+	char tmpmsg[100];
+	snprintf(tmpmsg,100,"Connection %d chose: %s",socket,choice);
+	output_log(tmpmsg);
 
 }
 
