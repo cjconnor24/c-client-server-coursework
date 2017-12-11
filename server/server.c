@@ -618,9 +618,9 @@ void get_menu_choice(int socket, char *choice){
 	readn(socket, (unsigned char *) choice, payload_length);
 
 	//DEBUG
-	char tmpmsg[100];
+	/*char tmpmsg[100];
 	snprintf(tmpmsg,100,"Connection %d chose: %s",socket,choice);
-	output_log(tmpmsg);
+	output_log(tmpmsg);*/
 
 }
 
